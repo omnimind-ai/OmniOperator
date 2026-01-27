@@ -23,6 +23,10 @@
   <a href="#api-reference">API Reference</a>
 </p>
 
+## Latest News 🔥
+
+- [2026.01.27] 🎉 **Clawdbot Plugin integration landed**: control Android GUI via OmniOperator DevServer 👉 `integrations/clawdbot/omni-operator/README.md`
+
 OmniOperator is an Android application designed to enable remote control and interaction with Android devices via HTTP requests. It runs a local proxy and a development server (DevServer) on the device, acting as a bridge between external commands and the Android system.
 
 The project includes a web-based "DevServer Playground" that can be accessed from any browser on the same network, providing a convenient UI for device debugging, command execution, and health/status checks.
