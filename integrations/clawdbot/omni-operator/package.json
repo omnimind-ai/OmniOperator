@@ -1,0 +1,12 @@
+{
+  "name": "omni-operator",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Clawdbot plugin for controlling Android devices via OmniOperator DevServer",
+  "clawdbot": {
+    "extensions": ["./index.ts"]
+  },
+  "peerDependencies": {
+    "clawdbot": "*"
+  }
+}

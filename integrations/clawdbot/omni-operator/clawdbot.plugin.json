@@ -1,0 +1,56 @@
+{
+  "id": "omni-operator",
+  "name": "OmniOperator",
+  "description": "Control Android devices via OmniOperator DevServer HTTP API",
+  "version": "1.0.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "devices": {
+        "type": "object",
+        "description": "Device configurations keyed by device ID",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string",
+              "description": "Device IP address"
+            },
+            "port": {
+              "type": "number",
+              "description": "DevServer port (default: 8080)"
+            },
+            "label": {
+              "type": "string",
+              "description": "Human-readable device name"
+            }
+          },
+          "required": ["host"]
+        }
+      },
+      "defaultDevice": {
+        "type": "string",
+        "description": "Default device ID to use when not specified"
+      },
+      "timeout": {
+        "type": "number",
+        "description": "HTTP request timeout in milliseconds (default: 30000)"
+      }
+    }
+  },
+  "uiHints": {
+    "devices": {
+      "label": "Devices",
+      "help": "Configure your Android devices running OmniOperator DevServer"
+    },
+    "defaultDevice": {
+      "label": "Default Device",
+      "help": "Device ID to use when not specified in tool calls"
+    },
+    "timeout": {
+      "label": "Timeout (ms)",
+      "placeholder": "30000"
+    }
+  }
+}
