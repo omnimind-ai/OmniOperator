@@ -8,7 +8,9 @@ import java.util.Collections
 
 object DevServerManager {
     private const val TAG = "DevServerManager"
-    private const val SERVER_PORT = 8080
+    private const val BASE_SERVER_PORT = 8080
+    private const val MAX_PORT_ATTEMPTS = 10
+    private const val PORT_RETRY_DELAY_MS = 30L
 
     private var omniDevServer: OmniDevServer? = null
     var serverAddress: String? = null
@@ -23,24 +25,44 @@ object DevServerManager {
             return serverAddress!!
         }
 
-        try {
-            // 1. Start the HTTP Server
-            omniDevServer = OmniDevServer(SERVER_PORT).apply { start() }
+        var lastError: Exception? = null
+        for (attempt in 0 until MAX_PORT_ATTEMPTS) {
+            val port = BASE_SERVER_PORT + attempt
+            try {
+                // 1. Start the HTTP Server
+                omniDevServer = OmniDevServer(port).apply { start() }
 
-            // 2. Get the IP address
-            val ipAddress = getLocalIpAddress()
-            serverAddress = "$ipAddress:$SERVER_PORT"
-            OmniLog.d(TAG, "DevServer starting on $serverAddress")
+                // 2. Get the IP address
+                val ipAddress = getLocalIpAddress()
+                serverAddress = "$ipAddress:$port"
+                OmniLog.d(TAG, "DevServer starting on $serverAddress")
 
-            // 3. Perform other tasks
-            readApplicationList(context)
+                // 3. Perform other tasks
+                readApplicationList(context)
 
-            return serverAddress!!
-        } catch (e: Exception) {
-            OmniLog.e(TAG, "Error starting server", e)
-            stopServer(context) // Clean up if something went wrong
-            throw e // Rethrow exception to be caught in MainActivity
+                return serverAddress!!
+            } catch (e: Exception) {
+                lastError = e
+                omniDevServer?.stop()
+                omniDevServer = null
+                serverAddress = null
+
+                if (isAddressInUseError(e)) {
+                    OmniLog.w(TAG, "Port $port in use, trying next port", e)
+                    if (attempt < MAX_PORT_ATTEMPTS - 1) {
+                        Thread.sleep(PORT_RETRY_DELAY_MS * (attempt + 1))
+                    }
+                    continue
+                }
+
+                OmniLog.e(TAG, "Error starting server", e)
+                break
+            }
         }
+
+        val error = lastError ?: IllegalStateException("Failed to start DevServer")
+        OmniLog.e(TAG, "Error starting server after retries", error)
+        throw error
     }
 
     fun stopServer(context: Context) {
@@ -82,5 +104,18 @@ object DevServerManager {
         val applications = packageManager.getInstalledApplications(0)
         val appList = applications.map { it.packageName }
         OmniLog.d(TAG, "Installed applications: $appList")
+    }
+
+    private fun isAddressInUseError(e: Exception): Boolean {
+        var current: Throwable? = e
+        while (current != null) {
+            if (current is java.net.BindException) return true
+            val message = current.message?.lowercase() ?: ""
+            if (message.contains("address already in use") || message.contains("bind failed")) {
+                return true
+            }
+            current = current.cause
+        }
+        return false
     }
 }
