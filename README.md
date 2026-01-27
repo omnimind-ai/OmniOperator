@@ -23,88 +23,96 @@
   <a href="#api-reference">API Reference</a>
 </p>
 
-OmniOperator is an Android application that empowers users to control and interact with their Android device remotely via HTTP requests. It achieves this by starting a local proxy and a development server directly on the device.
+OmniOperator is an Android application designed to enable remote control and interaction with Android devices via HTTP requests. It runs a local proxy and a development server (DevServer) on the device, acting as a bridge between external commands and the Android system.
 
-The project includes a web-based "DevServer Playground," accessible from any browser on the same network, allowing for intuitive device manipulation, command execution, and inspection.
+The project includes a web-based "DevServer Playground" that can be accessed from any browser on the same network, providing a convenient UI for device debugging, command execution, and health/status checks.
 
 ![Omni Operator Demo](./demo.gif)
+
+## Integrations / Ecosystem Integrations
+
+- **Clawdbot Plugin (Early/first-class integration)**
+  - **Core value**: brings visual Android GUI control to Clawdbot.
+  - **Scope**: use only on LAN / trusted networks; do not expose DevServer to the public internet.
+  - **Quickstart**: `integrations/clawdbot/omni-operator/README.md`
+  - **Demo**: see `./demo.gif` above (we will add a full “chat → device execution → screenshot/feedback” demo later).
+  - **Relationship with OpenOmniCloud**: OmniOperator is positioned as the on-device **execution layer** for OpenOmniCloud, and is also an open component for third-party ecosystem integrations (Clawdbot is among the first).
 
 ## Features
 
 **Core Android Application:**
-*   **On-Device HTTP Proxy:** Details of proxy functionality would be part of the Android app's core logic.
-*   **On-Device Dev Server:** Hosts the Playground and exposes an API for device operations.
-*   **Remote Device Operations:** Allows performing actions like tapping coordinates, opening applications, etc., via HTTP requests.
+* **On-device HTTP proxy:** Acts as a gateway for intercepting, proxying, and forwarding related network requests.
+* **On-device DevServer:** Hosts the Playground web UI and exposes core device operation APIs.
+* **Remote device operations:** Supports system-level operations such as coordinate-mapped taps and launching applications via HTTP APIs.
 
 **DevServer Playground (Web UI):**
-*   **Interactive Screenshot View:**
-    *   Fetch and display the current device screen (`/captureScreenshotImage`).
-    *   Click on the screenshot to get accurate pixel coordinates.
-    *   Coordinates are displayed and can be easily used in terminal commands.
-*   **UI XML Inspector:**
-    *   Fetch and display the XML representation of the current UI hierarchy (`/captureScreenshotXml`).
-    *   Uses the Monaco Editor for a rich XML viewing experience (syntax highlighting, folding).
-*   **Integrated Terminal (xterm.js):**
-    *   Execute built-in commands for playground interaction (`screenshot`, `xmlshot`, `help`, `clear`, `apidoc`).
-    *   Execute dynamic, server-defined commands to control the Android device (e.g., `tapCoordinate <x> <y>`, `launchApplication <packageName>`).
-    *   Tab completion for commands.
-    *   Command history (Arrow Up).
-    *   Clear current line (Ctrl+U).
-*   **API Documentation Access:** A command (`apidoc`) to easily open the API documentation (hosted at `/redoc`).
+* **Interactive screen mirroring:**
+  * Fetch and render the current device screenshot (`/captureScreenshotImage`).
+  * Click on the screenshot to get precise pixel coordinates.
+  * Use the coordinates directly in terminal commands for rapid debugging.
+* **UI XML inspector:**
+  * Extract and display the current UI hierarchy as XML (`/captureScreenshotXml`).
+  * Built-in Monaco Editor with syntax highlighting and folding for easier UI-tree inspection.
+* **Integrated terminal (xterm.js):**
+  * **Built-in commands**: `screenshot`, `xmlshot`, `help`, `clear`, `apidoc`, etc.
+  * **Direct control**: run commands like `tapCoordinate <x> <y>` or `launchApplication <packageName>`.
+  * **Quality of life**: tab completion, command history, and Ctrl+U to clear the current line.
+* **API documentation**: run `apidoc` to jump to `/redoc` for full API definitions.
 
 ## Quickstart
 
 1. Install the APK or build from source (see below).
-2. Open **OmniOperator** on the device and **Start DevServer**.
-3. Note the IP/port shown in the app (for example: `http://192.168.1.5:8080`).
-4. Open that address in a browser on the same network to access the Playground.
-5. Use the terminal commands (`help`, `screenshot`, `xmlshot`, `apidoc`) to explore.
+2. Launch **OmniOperator** on your Android device and tap **Start DevServer**.
+3. Copy the IP address and port shown in the app (e.g., `http://192.168.1.5:8080`).
+4. Open the address in a browser on the same LAN to enter the Playground.
+5. Try `help`, `screenshot`, `xmlshot`, or `apidoc` in the terminal to get started.
 
 ## Prerequisites
 
-- Android Studio + Android SDK (with platform tools / adb).
-- JDK 17 (recommended for modern Android builds).
-- Flutter SDK (for the web playground module).
-- A physical Android device or emulator with network access.
+- **Android Studio** + **Android SDK** (with platform tools / adb).
+- **JDK 17** (recommended for modern Android builds).
+- **Flutter SDK** (for building the web Playground module).
+- An Android **physical device** or a network-accessible **emulator**.
 
 ## Installation & Setup (Android Application)
 
-1.  Obtain the APK.
-    *   Download the latest `app-debug.apk` from the project's releases page.
-    *   Or, build the Android project from the source code to generate the APK.
-2.  Install on Android Device.
-3.  Open the **OmniOperator** application on your Android device.
-4.  Within the app, find the option to **Start DevServer**.
-    *   AccessibilityService permissions might be required for full functionality.
-5.  The app should display the IP address and port where the DevServer is running (e.g., `http://192.168.1.5:8080`).
-6.  Open a web browser on your computer (or another device on the same network) and navigate to this address.
+1. **Get the APK:**
+   * Download the published `app-release.apk`.
+   * Or build it from source.
+2. **Install** the APK on your Android device.
+3. **Launch** **OmniOperator**.
+4. **Start the service:** tap **Start DevServer**.
+   * Note: the system may prompt you to enable Accessibility Service for full control capabilities.
+5. **Connect:** the app will display the DevServer IP and port; open it in a browser on the same network.
 
 ## Build & Run (From Source)
 
-1.  Initialize the Flutter module:
+If you want to build from source, follow these steps:
+
+1. Initialize the Flutter module:
     ```bash
     cd flutter_module
     flutter pub get
     ```
-2.  Build the Android app:
+2. Build the Android app:
     ```bash
     ./gradlew assembleDebug
     ```
-3.  Install to a connected device:
+3. Install to a connected device:
     ```bash
     ./gradlew :app:installDebug
     ```
-4.  Launch **OmniOperator** on the device and start the DevServer.
+4. Launch **OmniOperator** on the device and start the DevServer.
 
 ## API Reference
 
-For a comprehensive list and details of all API endpoints, parameters, and responses, use the `apidoc` command in the Playground's terminal or directly navigate to `http://<device-ip>:<port>/redoc`.
+Use `apidoc` in the Playground terminal, or open `http://<device-ip>:<port>/redoc` to view the full Swagger/OpenAPI documentation.
 
 ## Compatibility & Permissions
 
 - Target platform: Android (device or emulator).
-- Network: the device and browser must be on the same LAN.
-- Permissions: accessibility service may be required for full control actions.
+- Network: the controller (browser/scripts) must be on the same LAN as the device.
+- Permissions: Accessibility Service permission is required for actions like tap/scroll.
 
 ## Security Notes
 
@@ -124,24 +132,24 @@ For a comprehensive list and details of all API endpoints, parameters, and respo
 
 ## Architecture Design
 
-OmniOperator is the device-side execution layer used by **OpenOmniCloud**. It exposes a clean HTTP interface for device operations and hosts a lightweight DevServer Playground for debugging and manual control.
+OmniOperator is the on-device **execution layer** in the **OpenOmniCloud** stack. It exposes a standardized HTTP interface and ships with a lightweight DevServer Playground for manual debugging and control.
 
-**Design Principles**  
-This implementation focuses exclusively on OmniOperator and follows two core architectural principles:
+**Design principles**
+The current implementation focuses strictly on “execution” and follows two fundamental principles:
 
-1. **Passive Operation**  
-   OmniOperator operates strictly in a reactive mode - it performs actions only when explicitly requested through its API. It contains no autonomous behavior, decision-making logic, or goal-pursuing capabilities. This ensures predictable control and clear responsibility boundaries.
+1. **Passive execution**
+   OmniOperator executes actions only when explicitly requested via API. It contains no autonomous decision-making or goal-driven logic.
 
-2. **Statelessness**  
-   The service maintains zero persistent state between operations. All contextual information (task progress, operation history, or environmental observations) must be managed externally by the caller (for example OpenOmniCloud or a human operator). Each API request contains all necessary context to complete its operation.
+2. **Statelessness**
+   The service maintains no persistent business state. All context must be managed by the caller (e.g., OpenOmniCloud or a human operator).
 
-These design choices yield important benefits:
-- **Clear Separation of Concerns:** State management resides exclusively with controllers (human or agent)
-- **Deterministic Behavior:** Operations depend solely on explicit inputs
-- **Simplified Scaling:** Multiple controllers can interact with the same device
-- **Agent Compatibility:** Complements OpenOmniCloud by providing pure execution capabilities
+**Benefits**
+* **Clear responsibilities:** state and logic live entirely in the controller (OpenOmniCloud/human).
+* **Predictability:** device behavior depends only on explicit inputs.
+* **Extensibility:** multiple controllers can reuse the same device surface.
+* **Easy integration:** as a pure execution unit, it plugs into OpenOmniCloud and other automation systems.
 
-OmniOperator's API serves as the boundary between device-level operations and higher-order control, making it reusable for both direct human control (through the DevServer Playground) and OpenOmniCloud-driven automation.
+OmniOperator’s APIs form a clean boundary between device operations and higher-level control logic, making it suitable for both manual debugging (via the Playground) and OpenOmniCloud-driven automation.
 
 ## Contributing
 
@@ -177,7 +185,7 @@ Once dependencies are installed, you can build the full project using Android St
 
 ### Logging
 
-Please follow our [log management guidelines](docs/log_management.md) to maintain consistent and meaningful logging across the project.
+Please follow our [log management guidelines](docs/log_management.md) to keep logging consistent across the project.
 
 ### Support
 

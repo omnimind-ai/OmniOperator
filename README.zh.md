@@ -18,163 +18,176 @@
 
 <p align="center">
   <a href="README.md">English Docs</a> •
-  <a href="#功能">功能</a> •
+  <a href="#功能">功能特性</a> •
   <a href="#快速开始">快速开始</a> •
   <a href="#api-参考">API 参考</a>
 </p>
 
-OmniOperator 是一个 Android 应用，支持通过 HTTP 请求远程控制和交互 Android 设备。它会在设备上启动本地代理与开发服务器。
+OmniOperator 是一款 Android 应用程序，旨在通过 HTTP 请求实现对 Android 设备的远程控制与交互。它在设备上运行一个本地代理和开发服务器（DevServer），充当外部指令与设备系统之间的桥梁。
 
-项目包含一个基于 Web 的 “DevServer Playground”，同一网络内的浏览器即可访问，便于设备操作、命令执行与检查。
+项目内置了一个基于 Web 的 "DevServer Playground"，处于同一网络环境下的浏览器即可直接访问。该界面提供了便捷的设备调试、命令执行及状态检查功能。
 
 ![Omni Operator Demo](./demo.gif)
 
-## 功能
+## Integrations / 生态集成
+
+- **Clawdbot Plugin (早期/官方首要集成)**
+  - **核心价值**：为 Clawdbot 赋予 Android GUI 的可视化操作能力。
+  - **适用场景**：建议仅在局域网或受信任的网络环境中使用，请避免将 DevServer 直接暴露于公网。
+  - **快速入口**：`integrations/clawdbot/omni-operator/README.md`
+  - **演示**：可参考上方的 `./demo.gif`（后续将补充“聊天指令→手机执行→回传截图/反馈”的完整演示）。
+  - **与 OpenOmniCloud 的关系**：OmniOperator 定位为 OpenOmniCloud 的设备端**执行层**，同时也作为开放组件供 Clawdbot 等第三方生态集成。
+
+## 功能特性
 
 **核心 Android 应用：**
-*   **设备内 HTTP 代理：** 负责代理与转发相关请求。
-*   **设备内 Dev Server：** 提供 Playground 与设备操作 API。
-*   **远程设备操作：** 通过 HTTP 请求进行点击坐标、打开应用等操作。
+* **设备内 HTTP 代理：** 作为网关，负责拦截、代理及转发相关的网络请求。
+* **设备内 Dev Server：** 托管 Playground Web 界面并提供核心设备操作 API。
+* **远程设备操作：** 支持通过 HTTP 接口执行屏幕点击（坐标映射）、应用启动等系统级操作。
 
-**DevServer Playground（Web UI）：**
-*   **交互式截图视图：**
-    *   获取并显示当前设备屏幕（`/captureScreenshotImage`）。
-    *   点击截图获取准确像素坐标。
-    *   坐标可直接用于终端命令。
-*   **UI XML 检查器：**
-    *   获取并显示当前 UI 层级的 XML（`/captureScreenshotXml`）。
-    *   使用 Monaco Editor 提供语法高亮与折叠。
-*   **集成终端（xterm.js）：**
-    *   内置命令：`screenshot`、`xmlshot`、`help`、`clear`、`apidoc`。
-    *   执行动态指令控制设备（如 `tapCoordinate <x> <y>`、`launchApplication <packageName>`）。
-    *   支持 Tab 补全、历史命令、Ctrl+U 清行。
-*   **API 文档入口：** 使用 `apidoc` 打开 `/redoc`。
+**DevServer Playground (Web UI)：**
+* **交互式屏幕镜像：**
+    * 实时获取并渲染当前设备屏幕截图 (`/captureScreenshotImage`)。
+    * 支持点击截图直接获取精确的像素坐标。
+    * 获取的坐标可直接填入终端命令中，实现快速调试。
+* **UI XML 检查器：**
+    * 提取并展示当前 UI 层级的 XML 结构 (`/captureScreenshotXml`)。
+    * 集成 Monaco Editor，提供代码高亮与折叠功能，便于分析 UI 树。
+* **集成终端 (xterm.js)：**
+    * **内置指令**：支持 `screenshot` (截图)、`xmlshot` (获取XML)、`help` (帮助)、`clear` (清屏)、`apidoc` (文档) 等快捷指令。
+    * **动态控制**：直接执行设备控制命令，如 `tapCoordinate <x> <y>` (点击坐标) 或 `launchApplication <packageName>` (启动应用)。
+    * **增强体验**：支持 Tab 自动补全、命令历史回溯以及 Ctrl+U 清除当前行。
+* **API 文档集成：** 输入 `apidoc` 命令即可快速跳转至 `/redoc` 查看完整接口定义。
 
 ## 快速开始
 
-1. 安装 APK 或从源码构建（见下）。
-2. 在设备上打开 **OmniOperator** 并 **Start DevServer**。
-3. 记录应用显示的 IP/端口（例如 `http://192.168.1.5:8080`）。
-4. 在同一网络中的浏览器打开该地址访问 Playground。
-5. 使用 `help`、`screenshot`、`xmlshot`、`apidoc` 进行探索。
+1.  安装 APK 或从源码编译（详见下文）。
+2.  在 Android 设备上启动 **OmniOperator** 并点击 **Start DevServer**。
+3.  记录应用界面上显示的 IP 地址与端口号（例如 `http://192.168.1.5:8080`）。
+4.  在同一局域网内的电脑或手机浏览器中输入该地址，进入 Playground。
+5.  在终端尝试输入 `help`、`screenshot`、`xmlshot` 或 `apidoc` 开始探索。
 
-## 先决条件
+## 环境要求
 
-- Android Studio + Android SDK（含 platform tools / adb）。
-- JDK 17（建议用于现代 Android 构建）。
-- Flutter SDK（用于 Web Playground 模块）。
-- 实体 Android 设备或可联网的模拟器。
+- **Android Studio** + **Android SDK**（需包含 platform tools / adb）。
+- **JDK 17**（推荐用于现代 Android 项目构建）。
+- **Flutter SDK**（用于构建 Web Playground 模块）。
+- **Android 设备**（真机）或可联网的**模拟器**。
 
-## 安装与配置（Android 应用）
+## 安装与配置 (Android 应用)
 
-1. 获取 APK。
-    *   下载 `app-debug.apk`。
-    *   或从源码构建生成 APK。
-2. 安装到 Android 设备。
-3. 在设备上打开 **OmniOperator**。
-4. 在应用内选择 **Start DevServer**。
-    *   为完整功能可能需要启用无障碍服务权限。
-5. 应用将显示 DevServer 的 IP 和端口。
-6. 在同一网络中的浏览器打开该地址。
+1.  **获取 APK：**
+    * 直接下载发布的 `app-release.apk`。
+    * 或者从源码自行构建生成。
+2.  **安装：** 将 APK 安装至您的 Android 设备。
+3.  **启动：** 打开 **OmniOperator** 应用。
+4.  **运行服务：** 点击 **Start DevServer** 按钮。
+    * *注意：为了获得完整的控制能力，系统可能会提示您开启无障碍服务权限。*
+5.  **连接：** 应用将显示 DevServer 的运行 IP 和端口，在同网络下的浏览器中访问该地址即可。
 
-## 从源码构建与运行
+## 源码构建指南
 
-1. 初始化 Flutter 模块：
+如果您希望从源码自行编译，请按以下步骤操作：
+
+1.  **初始化 Flutter 模块：**
     ```bash
     cd flutter_module
     flutter pub get
     ```
-2. 构建 Android 应用：
+2.  **构建 Android 应用：**
     ```bash
     ./gradlew assembleDebug
     ```
-3. 安装到设备：
+3.  **安装至设备：**
     ```bash
     ./gradlew :app:installDebug
     ```
-4. 在设备上启动 **OmniOperator** 并开启 DevServer。
+4.  **启动：** 在设备上打开 **OmniOperator** 并启动 DevServer。
 
 ## API 参考
 
-完整 API 列表和说明可在 Playground 终端使用 `apidoc`，或直接访问 `http://<device-ip>:<port>/redoc`。
+您可以在 Playground 的终端中输入 `apidoc` 查看常用命令，或访问 `http://<device-ip>:<port>/redoc` 获取完整的 Swagger/OpenAPI 文档。
 
-## 兼容性与权限
+## 兼容性与权限说明
 
-- 平台：Android（设备或模拟器）。
-- 网络：设备与浏览器需在同一局域网。
-- 权限：部分控制能力需开启无障碍服务。
+- **平台**：Android（支持真机与模拟器）。
+- **网络**：控制端（浏览器/脚本）需与 Android 设备处于同一局域网（LAN）。
+- **权限**：为了实现点击、滑动等操作，应用需要获取**无障碍服务 (Accessibility Service)** 权限。
 
 ## 安全提示
 
 > [!WARNING]
-> *   DevServer 仅用于受信任的本地网络。
-> *   避免将设备 IP/端口暴露到公网。
-> *   不使用时请关闭 DevServer。
+> * **DevServer 设计用于受信任的本地网络环境。**
+> * **请务必避免将设备的 IP/端口暴露在公网上。**
+> * **不使用时，建议在应用内关闭 DevServer。**
 
 ## 项目结构
 
 ```text
 .
-├── app/                 # Android 应用源码
-├── flutter_module/      # Web Playground
-└── docs/                # 补充文档
+├── app/                 # Android 原生应用源码 (Kotlin)
+├── flutter_module/      # Web Playground 源码 (Flutter)
+└── docs/                # 补充文档与指南
+
 ```
 
-## 架构设计
+## 架构设计理念
 
-OmniOperator 是 **OpenOmniCloud** 使用的设备侧执行层，提供设备操作的 HTTP 接口，并承载轻量的 DevServer Playground 用于调试与人工控制。
+OmniOperator 是 **OpenOmniCloud** 体系中的设备侧**执行层**。它对外提供标准化的 HTTP 接口，并承载了一个轻量级的 DevServer Playground 用于人工调试与控制。
 
-**设计原则**  
-当前实现仅专注 OmniOperator，并遵循两条核心原则：
+**设计原则**
+目前的实现严格专注于“执行”这一核心职责，并遵循以下两条基本原则：
 
-1. **被动运行**  
-   仅在 API 请求触发时执行动作，不包含自主决策或目标驱动逻辑。
+1. **被动运行 (Passive Execution)**
+OmniOperator 仅在接收到明确的 API 请求时才执行动作。它本身不包含任何自主决策机制或目标驱动的逻辑。
+2. **无状态 (Statelessness)**
+服务不维护任何持久化的业务状态。所有的上下文信息（Context）都必须由调用方（如 OpenOmniCloud 或人工操作者）负责管理和维护。
 
-2. **无状态**  
-   服务不保留持久状态；上下文需由调用方提供与管理（例如 OpenOmniCloud 或人工操作者）。
+**设计收益：**
 
-这些设计带来的好处：
-- **职责清晰：** 状态由控制方（OpenOmniCloud 或人工操作者）管理
-- **可预测性：** 行为仅由输入驱动
-- **易扩展：** 多个控制器可复用同一设备
-- **便于集成：** 作为纯执行层与 OpenOmniCloud 协作
+* **职责清晰**：状态与逻辑完全交由控制方（OpenOmniCloud/人）管理。
+* **可预测性**：设备行为完全取决于输入指令，无隐含副作用。
+* **易扩展**：支持多个控制器复用同一设备资源。
+* **易集成**：作为纯粹的执行单元，能够轻松接入 OpenOmniCloud 或其他自动化系统。
 
-OmniOperator 的 API 作为设备执行与高层控制之间的边界，既适合人类直接控制，也适用于 OpenOmniCloud 驱动的自动化。
+OmniOperator 的 API 构成了设备执行层与高层控制逻辑之间的清晰边界，这使得它既适合开发者进行手动调试，也是构建自动化系统的理想基石。
 
 ## 参与贡献
 
-欢迎贡献。请遵循以下指南以保持一致性。
+我们非常欢迎社区的贡献！为了保持项目的一致性，请遵循以下指南。
 
 ### 分支策略
 
-- 非小改动请使用 feature 分支。
-- 提交 PR 到仓库默认分支。
+* 对于非微小的改动，请创建独立的 `feature` 分支。
+* 所有 Pull Request (PR) 请提交至仓库的默认分支。
 
 ### 代码风格
 
-项目使用 **Ktlint** 进行代码风格检查，提交前请运行：
+本项目使用 **Ktlint** 维护代码风格。在提交代码前，请运行以下命令进行检查：
 
 ```bash
 ./gradlew ktlintCheck
+
 ```
 
-建议在 IDE 中安装 Ktlint 插件以获得自动格式化支持。
+强烈建议在您的 IDE 中安装 Ktlint 插件，以便在编码时自动格式化。
 
 ### 构建说明
 
-请先安装 **Flutter SDK**，然后初始化 Flutter 模块依赖：
+请确保已安装 **Flutter SDK**。在构建 Android 项目前，需先初始化 Flutter 依赖：
 
 ```bash
 cd flutter_module
 flutter pub get
+
 ```
 
-依赖完成后，可在 Android Studio 中构建，或使用 Gradle 命令行。
+依赖准备就绪后，即可使用 Android Studio 或 Gradle 命令行进行构建。
 
-### 日志
+### 日志规范
 
-请参考 [日志管理规范](docs/log_management.md) 以保持日志一致性。
+请参考 [日志管理规范](https://www.google.com/search?q=docs/log_management.md) 以确保日志格式的统一性。
 
-### 支持
+### 支持与反馈
 
-如需 FAQ 或排障，请查看 `docs/` 下文档或提交 issue。
+如需查看 FAQ 或进行故障排查，请查阅 `docs/` 目录下的文档。如有未解决的问题，欢迎提交 Issue。
