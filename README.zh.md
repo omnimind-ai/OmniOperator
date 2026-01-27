@@ -23,6 +23,10 @@
   <a href="#api-参考">API 参考</a>
 </p>
 
+## 最新动态 🔥
+
+- [2026.01.27] 🎉 **抢先支持 Clawdbot 插件接入**：通过 OmniOperator DevServer 为 Clawdbot 补齐 Android GUI 操作能力 👉 `integrations/clawdbot/omni-operator/README.md`
+
 OmniOperator 是一款 Android 应用程序，旨在通过 HTTP 请求实现对 Android 设备的远程控制与交互。它在设备上运行一个本地代理和开发服务器（DevServer），充当外部指令与设备系统之间的桥梁。
 
 项目内置了一个基于 Web 的 "DevServer Playground"，处于同一网络环境下的浏览器即可直接访问。该界面提供了便捷的设备调试、命令执行及状态检查功能。
