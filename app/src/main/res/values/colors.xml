@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    
+    <color name="island_deep_purple">#392b58</color>
+    <color name="island_medium_purple">#474787</color>
+    <color name="island_dark_red">#b23850</color>
+    <color name="island_light_pink">#ecc8c8</color>
+<!--    <color name="island_background">#aa392b58</color>-->
+    <color name="island_accept_button">#474787</color>
+    <color name="island_reject_button">#b23850</color>
+    <color name="island_choice_button">#4b4a97</color>
+    <color name="island_border_normal">#6270d6</color>
+    <color name="island_border_warning">#ff5d73</color>
+    
+    <!-- 点击和滑动特效颜色 -->
+    <color name="island_touch_effect">#33ecc8c8</color>
+    <color name="island_circle_core">#ecc8c8</color>
+    <color name="island_circle_gradient_start">#a0474787</color>
+    <color name="island_circle_gradient_end">#00474787</color>
+    <color name="island_finger_fill">#40474787</color>
+    <color name="island_finger_stroke">#60ecc8c8</color>
+    <color name="island_finger_inner_stroke">#80ecc8c8</color>
+    
+    <!-- 选择UI的颜色 -->
+    <color name="choice_background">#1D1B26</color>
+    <color name="choice_title_text">#F8F9FA</color>
+    <color name="choice_option_background">#2F2B43</color>
+    <color name="choice_option_selected">#6272F6</color>
+    <color name="choice_option_text">#F0F1F5</color>
+    <color name="choice_confirm_button">#4E7AFF</color>
+    <color name="choice_cancel_button">#CF4E69</color>
+
+    <color name="island_background">#2C2C2E</color>
+    <color name="island_action_blue">#0A84FF</color>
+</resources>

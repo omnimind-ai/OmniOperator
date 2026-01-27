@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>OmniOperatorClient Generator</title>
+        <link href="static/vendor/tailwind/tailwind.min.css" rel="stylesheet">
+        <link href="static/vendor/prism/prism.min.css" rel="stylesheet" />
+
+        <style>
+            pre code {
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            }
+
+            pre.error-block {
+                border: 1px solid #ef4444;
+            }
+
+            pre.error-block code {
+                color: #ef4444;
+            }
+        </style>
+    </head>
+
+    <body class="bg-gray-100 text-gray-800 font-sans leading-relaxed p-4 md:p-8">
+        <div id="container" class="bg-white p-6 md:p-8 rounded-lg shadow-xl max-w-5xl mx-auto">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-700 mb-6 text-center md:text-left">
+                Generated Python Client: <span class="text-blue-600">OmniOperatorClient</span>
+            </h1>
+            <p class="text-sm text-gray-600 mb-2">
+                This Python client is automatically generated from your <code>/openapi.json</code>.
+                It uses the <code>requests</code> library and includes type hints.
+            </p>
+            <p class="text-sm text-gray-600 mb-6">
+                You'll need to install requests: <code class="bg-gray-200 px-1 rounded">pip install requests</code>
+            </p>
+
+            <button id="copyButton"
+                    class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out mb-6 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Copy to Clipboard
+            </button>
+
+            <pre id="codeBlockContainer"
+                    class="bg-gray-800 text-gray-200 p-4 rounded-md overflow-x-auto text-sm shadow-inner">
+                <code id="pythonCode" class="language-python">Fetching /openapi.json and generating code...</code>
+            </pre>
+        </div>
+
+        <script src="static/vendor/prism/prism.min.js"></script>
+        <script src="static/vendor/prism/prism-python.min.js"></script>
+
+
+        <script>
+            const pythonCodeElement = document.getElementById('pythonCode');
+            const codeBlockContainer = document.getElementById('codeBlockContainer');
+            const copyButton = document.getElementById('copyButton');
+            const originalButtonText = copyButton.innerHTML; // Store original button content
+
+            function toPascalCase(str) {
+                return str.replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => word.toUpperCase()).replace(/\s+/g, '');
+            }
+
+            function toSnakeCase(str) {
+                console.log("Converting to snake_case:", str);
+                let s = str.replace(/^handle/, '').replace(/Request$/, '');
+                s = s.replace(/([A-Z])/g, (match) => `_${match.toLowerCase()}`);
+                if (s.startsWith('_')) {
+                    s = s.substring(1);
+                }
+                console.log("Converted to snake_case:", s);
+                return s;
+            }
+
+            function mapOpenApiTypeToPython(openapiType, itemsSchema = null) {
+                if (openapiType === 'string') return 'str';
+                if (openapiType === 'integer') return 'int';
+                if (openapiType === 'boolean') return 'bool';
+                if (openapiType === 'number') return 'float';
+                if (openapiType === 'array') {
+                    if (itemsSchema && itemsSchema.type) {
+                        return `List[${mapOpenApiTypeToPython(itemsSchema.type, itemsSchema.items)}]`;
+                    } else if (itemsSchema && itemsSchema.$ref) {
+                        const refName = itemsSchema.$ref.split('/').pop();
+                        return `List[${toPascalCase(refName)}]`;
+                    }
+                    return 'List[Any]';
+                }
+                if (openapiType === 'object') {
+                    if (itemsSchema && itemsSchema.properties) {
+                        return 'Dict[str, Any]';
+                    }
+                    return 'Dict[str, Any]';
+                }
+                return 'Any';
+            }
+
+            async function generateClient() {
+                try {
+                    const response = await fetch('openapi.json');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status} when fetching /openapi.json`);
+                    }
+                    const spec = await response.json();
+
+                    let pyCode = `
+# Automatically generated Python client for OmniOperator API
+# from /openapi.json specification
+
+import requests
+from typing import TypedDict, List, Dict, Any, Optional, Union
+from requests.auth import HTTPBasicAuth
+
+# --- Component Schemas (as TypedDicts) ---
+`;
+                    const componentSchemas = spec.components?.schemas || {};
+                    for (const schemaName in componentSchemas) {
+                        const schema = componentSchemas[schemaName];
+                        pyCode += `class ${toPascalCase(schemaName)}(TypedDict):\n`;
+                        if (schema.properties) {
+                            const requiredFields = schema.required || [];
+                            Object.keys(schema.properties).forEach((propName, index, arr) => {
+                                const prop = schema.properties[propName];
+                                const pyType = prop.$ref ? toPascalCase(prop.$ref.split('/').pop()) : mapOpenApiTypeToPython(prop.type, prop.items);
+                                const isOptional = !requiredFields.includes(propName);
+                                pyCode += `    ${propName}: ${isOptional ? 'Optional[' : ''}${pyType}${isOptional ? ']' : ''}\n`;
+                            });
+                            if (Object.keys(schema.properties).length === 0) {
+                                pyCode += `    pass # No properties defined for ${toPascalCase(schemaName)}\n`;
+                            }
+                        } else {
+                            pyCode += `    pass # Schema ${toPascalCase(schemaName)} is not an object with properties\n`;
+                        }
+                        pyCode += `\n\n`;
+                    }
+
+                    pyCode += `# --- Response TypedDicts ---\n`;
+                    pyCode += `class BasicResponse(TypedDict):\n`;
+                    pyCode += `    success: bool\n`;
+                    pyCode += `    message: str\n\n`;
+
+                    const responseTypes = {};
+                    for (const path in spec.paths) {
+                        const pathObject = spec.paths[path];
+                        for (const method in pathObject) {
+                            if (method.toLowerCase() === 'get') {
+                                const operation = pathObject[method];
+                                const successResponse = operation.responses['200'];
+                                if (successResponse?.content?.['application/json']?.schema) {
+                                    const schema = successResponse.content['application/json'].schema;
+                                    if (schema.properties?.data?.$ref) {
+                                        const dataRef = schema.properties.data.$ref.split('/').pop();
+                                        const responseTypeName = `${toPascalCase(dataRef)}Response`;
+                                        if (!responseTypes[responseTypeName]) {
+                                            pyCode += `class ${responseTypeName}(TypedDict):\n`;
+                                            pyCode += `    success: bool\n`;
+                                            pyCode += `    message: str\n`;
+                                            pyCode += `    data: ${toPascalCase(dataRef)}\n\n`;
+                                            responseTypes[responseTypeName] = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    pyCode += `class OmniOperatorClient:\n`;
+                    pyCode += `    \"\"\"API client for controlling the Omni application.\"\"\"\n\n`;
+                    pyCode += `    def __init__(self, base_url: str, username: Optional[str] = None, password: Optional[str] = None):\n`;
+                    pyCode += `        \"\"\"\n`;
+                    pyCode += `        Initializes the OmniOperatorClient.\n\n`;
+                    pyCode += `        Args:\n`;
+                    pyCode += `            base_url (str): The base URL of the Omni DevServer (e.g., "http://localhost:8080")\n`;
+                    pyCode += `            username (Optional[str]): Username for basic authentication.\n`;
+                    pyCode += `            password (Optional[str]): Password for basic authentication.\n`;
+                    pyCode += `        \"\"\"\n`;
+                    pyCode += `        self.base_url = base_url.rstrip('/')\n`;
+                    pyCode += `        self.session = requests.Session()\n`;
+                    pyCode += `        if username and password:\n`;
+                    pyCode += `            from requests.auth import HTTPBasicAuth\n`;
+                    pyCode += `            self.session.auth = HTTPBasicAuth(username, password)\n\n`;
+
+                    for (const path in spec.paths) {
+                        const pathObject = spec.paths[path];
+                        if (pathObject.get) {
+                            const operation = pathObject.get;
+                            const operationId = operation.operationId;
+                            const summary = operation.summary || '';
+                            const methodName = toSnakeCase(operationId);
+
+                            let paramsSignature = [];
+                            let paramsForRequest = [];
+                            let paramDocstrings = [];
+
+                            if (operation.parameters) {
+                                operation.parameters.forEach(param => {
+                                    const paramType = mapOpenApiTypeToPython(param.schema.type);
+                                    paramsSignature.push(`${toSnakeCase(param.name)}: ${paramType}`);
+                                    paramsForRequest.push(`"${param.name}": ${toSnakeCase(param.name)}`);
+                                    paramDocstrings.push(`            ${toSnakeCase(param.name)} (${paramType})`);
+                                });
+                            }
+
+                            let returnTypeAnnotation = 'BasicResponse';
+                            const successResponse = operation.responses['200'];
+                            if (successResponse?.content?.['application/json']?.schema) {
+                                const schema = successResponse.content['application/json'].schema;
+                                if (schema.properties?.data?.$ref) {
+                                    const dataRef = schema.properties.data.$ref.split('/').pop();
+                                    returnTypeAnnotation = `${toPascalCase(dataRef)}Response`;
+                                }
+                            }
+
+                            pyCode += `    def ${methodName}(self, ${paramsSignature.join(', ')}) -> ${returnTypeAnnotation}:\n`;
+                            pyCode += `        """\n        ${summary}\n\n`;
+                            if (paramDocstrings.length > 0) {
+                                pyCode += `        Args:\n`;
+                                pyCode += paramDocstrings.join('\n') + '\n';
+                            }
+                            pyCode += `\n        Returns:\n`;
+                            pyCode += `            ${returnTypeAnnotation}: The response from the server.\n`;
+                            pyCode += `        """\n`;
+                            const cleanPath = path.replace(/\\\/g, '/);
+                            pyCode += `        url = f"{self.base_url}${cleanPath}"\n`;
+                            if (paramsForRequest.length > 0) {
+                                pyCode += `        params = {${paramsForRequest.join(', ')}}\n`;
+                                pyCode += `        response = self.session.get(url, params=params)\n`;
+                            } else {
+                                pyCode += `        response = self.session.get(url)\n`;
+                            }
+                            pyCode += `        response.raise_for_status()\n`;
+                            pyCode += `        return response.json()\n\n`;
+                        }
+                    }
+
+                    pythonCodeElement.textContent = pyCode;
+                    console.log("Generated Python client code:", pyCode);
+                    Prism.highlightElement(pythonCodeElement);
+                    codeBlockContainer.classList.remove('error-block');
+                } catch (error) {
+                    pythonCodeElement.textContent = `Error generating client: ${error.message}\n\nStack Trace:\n${error.stack}`;
+                    codeBlockContainer.classList.add('error-block');
+                    console.error("Error generating client:", error);
+                }
+            }
+
+            copyButton.addEventListener('click', () => {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(pythonCodeElement.textContent)
+                        .then(() => {
+                            copyButton.innerHTML = `
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Copied!`;
+                            setTimeout(() => { copyButton.innerHTML = originalButtonText; }, 2000);
+                        })
+                        .catch(err => {
+                            console.error('Failed to copy text: ', err);
+                            alert('Failed to copy. Please copy manually.');
+                        });
+                } else {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = pythonCodeElement.textContent;
+                    textArea.style.position = 'fixed'; // Prevent scrolling to bottom
+                    textArea.style.top = '0';
+                    textArea.style.left = '0';
+                    textArea.style.opacity = '0';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        copyButton.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Copied!`;
+                        setTimeout(() => { copyButton.innerHTML = originalButtonText; }, 2000);
+                    } catch (err) {
+                        console.error('Fallback copy failed: ', err);
+                        alert('Failed to copy. Please copy manually.');
+                    }
+                    document.body.removeChild(textArea);
+                }
+            });
+
+            generateClient();
+        </script>
+    </body>
+
+</html>

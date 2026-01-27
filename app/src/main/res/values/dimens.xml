@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="choice_option_margin">8dp</dimen>
+    <dimen name="island_corner_radius">28dp</dimen>
+    <dimen name="island_horizontal_margin">8dp</dimen>
+    <dimen name="island_vertical_margin">4dp</dimen>
+    <dimen name="dynamic_island_max_width">580dp</dimen>
+</resources> 

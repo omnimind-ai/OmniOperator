@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- The circular background from the ClickIndicator -->
+    <View
+        android:id="@+id/indicator_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/click_indicator_background" />
+
+    <!-- The arrow, centered within the circle -->
+    <ImageView
+        android:id="@+id/indicator_arrow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="center"
+        android:src="@drawable/scroll_indicator_arrow" />
+
+</FrameLayout>

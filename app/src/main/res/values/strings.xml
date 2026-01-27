@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">OmniOperator</string>
+    <string name="accessibility_service_description">Enable Accessibility Service</string>
+
+    <!-- Service Status -->
+    <string name="omni_service_title">OmniOperator Service</string>
+    <string name="omni_service_content">OmniOperator is now running and ready to assist you.</string>
+    <string name="omni_app_name_now">OmniOperator • Now</string>
+
+    <!-- Generic Operation Status -->
+    <string name="omni_op_failed_title">Operation Failed</string>
+    <string name="omni_op_failed_content_generic">An unknown error occurred.</string>
+    <string name="omni_action_confirm">Confirm</string>
+    <string name="omni_action_refuse">Refuse</string>
+
+    <!-- Specific Operation Titles -->
+    <string name="omni_title_xml_captured">XML Captured</string>
+    <string name="omni_title_user_confirmation">User Confirmation</string>
+    <string name="omni_title_user_choice">User Choice</string>
+    <string name="omni_title_node_clicked">Node Clicked</string>
+    <string name="omni_title_node_long_clicked">Node Long-Clicked</string>
+    <string name="omni_title_node_scrolled">Node Scrolled</string>
+    <string name="omni_title_text_input">Text Input</string>
+    <string name="omni_title_coord_clicked">Coordinate Clicked</string>
+    <string name="omni_title_coord_long_clicked">Coordinate Long-Clicked</string>
+    <string name="omni_title_coord_scrolled">Coordinate Scrolled</string>
+    <string name="omni_title_home_action">Home Action</string>
+    <string name="omni_title_back_action">Back Action</string>
+    <string name="omni_title_app_launched">App Launched</string>
+    <string name="omni_title_metadata_got">Metadata Got</string>
+
+    <!-- Specific Operation Content -->
+    <string name="omni_content_xml_captured_success">Screenshot XML captured successfully.</string>
+    <string name="omni_content_user_confirmed">User confirmed: %1$s</string>
+    <string name="omni_content_user_refused">User refused: %1$s</string>
+    <string name="omni_content_user_chose">User selected: %1$s</string>
+    <string name="omni_content_user_cancelled_choice">User cancelled choice.</string>
+    <string name="omni_content_node_clicked_success">Clicked node with ID \'%1$s\'.</string>
+    <string name="omni_content_node_long_clicked_success">Long-clicked node with ID \'%1$s\'.</string>
+    <string name="omni_content_node_scrolled_success">Scrolled node \'%1$s\' %2$s.</string>
+    <string name="omni_content_text_input_success">Input text into node \'%1$s\'.</string>
+    <string name="omni_content_text_input_focused_success">Input text into the focused node.</string>
+    <string name="omni_content_coord_clicked_success">Clicked at (%1$s, %2$s).</string>
+    <string name="omni_content_coord_long_clicked_success">Long-clicked at (%1$s, %2$s).</string>
+    <string name="omni_content_coord_scrolled_success">Scrolled at (%1$s, %2$s) %3$s.</string>
+    <string name="omni_content_home_action_success">Navigated to home screen.</string>
+    <string name="omni_content_back_action_success">Back action performed.</string>
+    <string name="omni_content_app_launched_success">%1$s launched.</string>
+    <string name="omni_content_metadata_got_success">Package name and activity name:(%1$s,%2$s)</string>
+
+</resources>

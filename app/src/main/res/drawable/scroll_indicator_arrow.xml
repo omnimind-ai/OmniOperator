@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This icon is adapted from https://heroicons.com/ chevron-right -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <group
+        android:pivotX="12"
+        android:pivotY="12"
+        android:scaleX="0.7"
+        android:scaleY="0.7">
+        <path
+            android:pathData="m8.25 4.5 7.5 7.5-7.5 7.5"
+            android:strokeColor="#FF1976D2"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="3" />
+    </group>
+
+</vector>

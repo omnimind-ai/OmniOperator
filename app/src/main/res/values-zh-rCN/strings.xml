@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用名称，通常保持不变 -->
+    <string name="app_name">OmniOperator</string>
+    <string name="accessibility_service_description">启用无障碍服务</string>
+
+    <!-- 服务状态 -->
+    <string name="omni_service_title">OmniOperator 服务</string>
+    <string name="omni_service_content">OmniOperator 正在运行并准备为您提供协助。</string>
+
+    <!--通用操作状态 -->
+    <string name="omni_app_name_now">OmniOperator • 现在</string>
+    <string name="omni_op_failed_title">操作失败</string>
+    <string name="omni_op_failed_content_generic">发生未知错误。</string>
+
+    <!-- 特定操作标题 -->
+    <string name="omni_action_refuse">拒绝</string>
+    <string name="omni_title_xml_captured">已捕获XML</string>
+    <string name="omni_title_user_confirmation">用户确认</string>
+    <string name="omni_title_user_choice">用户选择</string>
+    <string name="omni_title_node_clicked">已点击节点</string>
+    <string name="omni_title_node_long_clicked">已长按节点</string>
+    <string name="omni_title_node_scrolled">已滚动节点</string>
+    <string name="omni_title_text_input">文本输入</string>
+    <string name="omni_title_coord_clicked">已点击坐标</string>
+    <string name="omni_title_coord_long_clicked">已长按坐标</string>
+    <string name="omni_title_coord_scrolled">已滚动坐标</string>
+    <string name="omni_title_home_action">主屏幕操作</string>
+    <string name="omni_title_back_action">返回操作</string>
+    <string name="omni_title_app_launched">应用已启动</string>
+    <string name="omni_title_metadata_got">已获取元数据</string>
+
+    <!-- 特定操作内容 -->
+    <string name="omni_content_xml_captured_success">已成功捕获界面XML。</string>
+    <string name="omni_content_user_confirmed">用户已确认：%1$s</string>
+    <string name="omni_content_user_refused">用户已拒绝：%1$s</string>
+    <string name="omni_content_user_chose">用户已选择：%1$s</string>
+    <string name="omni_content_user_cancelled_choice">用户已取消选择。</string>
+    <string name="omni_content_node_clicked_success">已点击ID为 \'%1$s\' 的节点。</string>
+    <string name="omni_content_node_long_clicked_success">已长按ID为 \'%1$s\' 的节点。</string>
+    <string name="omni_content_node_scrolled_success">已%2$s滚动节点 \'%1$s\'。</string>
+    <string name="omni_content_text_input_success">已在节点 \'%1$s\' 中输入文本。</string>
+    <string name="omni_content_text_input_focused_success">已在当前聚焦的节点中输入文本。</string>
+    <string name="omni_content_coord_clicked_success">已点击坐标 (%1$s, %2$s)。</string>
+    <string name="omni_content_coord_long_clicked_success">已长按坐标 (%1$s, %2$s)。</string>
+    <string name="omni_content_coord_scrolled_success">已在坐标 (%1$s, %2$s) 处%3$s滚动。</string>
+    <string name="omni_content_home_action_success">已导航至主屏幕。</string>
+    <string name="omni_content_back_action_success">已执行返回操作。</string>
+    <string name="omni_content_app_launched_success">%1$s 已启动。</string>
+    <string name="omni_action_confirm">确认</string>
+    <string name="omni_content_metadata_got_success">应用包名:%1$s,活动名：%2$s</string>
+</resources>

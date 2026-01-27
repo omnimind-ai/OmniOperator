@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Omni DevServer Playground</title>
+        <link href="static/vendor/tailwind/tailwind.min.css" rel="stylesheet">
+        <link href="static/vendor/xterm/xterm.min.css" rel="stylesheet">
+        <script src="static/vendor/js-beautify/beautify-html.min.js"></script>
+        <style>
+            html {
+                height: 100%;
+            }
+
+            body {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                overflow: hidden;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            }
+
+            #main-content-wrapper {
+                flex-grow: 1;
+                display: flex;
+                overflow: hidden;
+            }
+
+            /* --- Left Pane Styling --- */
+            #left-pane {
+                display: flex;
+                flex-direction: column;
+                position: relative;
+            }
+
+            #left-pane-tabs {
+                flex-shrink: 0;
+                display: flex;
+                background-color: #1F2937;
+                border-bottom: 1px solid #374151;
+                padding: 0.25rem 0.25rem 0 0.25rem;
+            }
+
+            .tab-button {
+                flex: 0 1 auto;
+                padding: 0.65rem 1.2rem;
+                text-align: center;
+                background-color: #2D3748;
+                color: #A0AEC0;
+                border: 1px solid transparent;
+                border-bottom: none;
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+                cursor: pointer;
+                transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+                font-size: 0.875rem;
+                margin-right: 3px;
+                position: relative;
+                line-height: 1.5;
+            }
+
+            .tab-button:last-child {
+                margin-right: 0;
+            }
+
+            .tab-button:hover {
+                background-color: #374151;
+                color: #E2E8F0;
+            }
+
+            .tab-button.active {
+                background-color: #4a5568;
+                color: white;
+                font-weight: 600;
+                border-top: 1px solid #374151;
+                border-left: 1px solid #374151;
+                border-right: 1px solid #374151;
+                border-bottom: 2px solid #3B82F6;
+                margin-bottom: -1px;
+                z-index: 2;
+            }
+
+            #left-pane-content {
+                flex-grow: 1;
+                position: relative;
+                overflow: hidden;
+                background-color: #4a5568;
+            }
+
+            #screenshot-view {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 0.75rem;
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                inset: 0;
+            }
+
+            #xmlshot-view {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                inset: 0;
+            }
+
+            #screenshot {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                cursor: crosshair;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+                border-radius: 8px;
+            }
+
+            #coords-display {
+                position: absolute;
+                bottom: 12px;
+                left: 12px;
+                background-color: rgba(0, 0, 0, 0.8);
+                color: #e0e0e0;
+                padding: 6px 10px;
+                border-radius: 5px;
+                font-size: 0.8rem;
+                pointer-events: none;
+                z-index: 10;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            }
+
+            /* --- Right Pane (Terminal) Styling --- */
+            #right-pane-container {
+                padding: 0.75rem;
+                display: flex;
+                flex-direction: column;
+                /* flex-grow: 1; will be handled by JS flex properties */
+            }
+
+            #terminal-wrapper {
+                flex-grow: 1;
+                border-radius: 0.5rem;
+                overflow: hidden;
+                background-color: #1e1e1e;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), 0 6px 6px rgba(0, 0, 0, 0.25);
+                display: flex;
+                position: relative;
+            }
+
+            #terminal-container {
+                width: 100%;
+                height: 100%;
+            }
+
+            .xterm {
+                height: 100% !important;
+                padding: 10px;
+            }
+
+            .xterm .xterm-viewport {
+                border-radius: inherit;
+                background-color: #1e1e1e !important;
+                scrollbar-width: thin;
+                scrollbar-color: #4a5568 #2d3748;
+            }
+
+            /* Webkit scrollbar styling */
+            .xterm .xterm-viewport::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+
+            .xterm .xterm-viewport::-webkit-scrollbar-track {
+                background: #2d3748;
+                border-radius: 4px;
+            }
+
+            .xterm .xterm-viewport::-webkit-scrollbar-thumb {
+                background-color: #4a5568;
+                border-radius: 4px;
+                border: 1px solid #2d3748;
+            }
+
+            .xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+                background-color: #5a6778;
+            }
+
+            .xterm .xterm-viewport::-webkit-scrollbar-corner {
+                background: #1e1e1e;
+            }
+        </style>
+    </head>
+
+    <body class="bg-gray-900 text-gray-200">
+
+        <header class="bg-gray-800 text-white p-3 shadow-xl z-20 border-b border-gray-700">
+            <h1 class="text-2xl font-semibold text-center">🛠️ Omni DevServer Playground</h1>
+        </header>
+
+        <div id="main-content-wrapper">
+            <!-- Left Pane -->
+            <div id="left-pane" class="bg-gray-700"> <!-- Removed: w-1/3, border-r, border-gray-600 -->
+                <!-- Tabs -->
+                <div id="left-pane-tabs">
+                    <button id="tab-screenshot" class="tab-button">Screenshot</button>
+                    <button id="tab-xmlshot" class="tab-button">XML</button>
+                </div>
+
+                <!-- Content Area for Tabs -->
+                <div id="left-pane-content">
+                    <!-- Screenshot View -->
+                    <div id="screenshot-view">
+                        <img id="screenshot" src="static/placeholder.png" alt="Mobile Screenshot">
+                        <div id="coords-display">Image loading...</div>
+                    </div>
+
+                    <!-- XML View (Monaco Editor) -->
+                    <div id="xmlshot-view" style="display: none;">
+                        <div id="monaco-editor-container" style="width: 100%; height: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resizer will be dynamically inserted here by JavaScript -->
+
+            <!-- Right Pane -->
+            <div id="right-pane-container" class="bg-gray-700"> <!-- Removed: w-2/3 -->
+                <div id="terminal-wrapper">
+                    <div id="terminal-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <script src="static/vendor/jquery/jquery.min.js"></script>
+        <script src="static/vendor/xterm/xterm.min.js"></script>
+        <script src="static/xterm-addon-fit.min.js"></script>
+        <script src="static/vendor/monaco/vs/loader.js"></script>
+
+        <script>
+            $(document).ready(function () {
+                const $screenshot = $('#screenshot');
+                const screenshotImg = $screenshot[0];
+                const $coordsDisplay = $('#coords-display');
+                const $terminalDomElement = document.getElementById('terminal-container');
+
+                // --- Left Pane View Elements ---
+                const $tabScreenshot = $('#tab-screenshot');
+                const $tabXmlshot = $('#tab-xmlshot');
+                const $screenshotView = $('#screenshot-view');
+                const $xmlshotView = $('#xmlshot-view');
+                const $monacoContainer = $('#monaco-editor-container');
+                let monacoEditor;
+
+                let naturalWidth = 0;
+                let naturalHeight = 0;
+                let imageLoaded = false;
+                const commands = [];
+
+                let lastKnownScreenshotTimestamp = 0;
+                let lastKnownXmlTimestamp = 0;
+
+                // --- Pane Resizing Logic ---
+                const $leftPane = $('#left-pane');
+                const $rightPaneContainer = $('#right-pane-container');
+                const $mainContentWrapper = $('#main-content-wrapper');
+
+                const $resizer = $('<div id="resizer"></div>').css({
+                    width: '6px',
+                    cursor: 'col-resize',
+                    backgroundColor: '#4A5568',
+                    flexShrink: '0',
+                    zIndex: '5',
+                    transition: 'background-color 0.2s ease'
+                }).hover(function () {
+                    $(this).css('backgroundColor', '#5A6778');
+                }, function () {
+                    $(this).css('backgroundColor', '#4A5568');
+                }).insertAfter($leftPane);
+
+                // Initial setup for panes
+                const initialLeftPanePercent = 33.33;
+                $leftPane.css('flex', `0 0 ${initialLeftPanePercent}%`);
+                $resizer.css('flex', '0 0 ' + $resizer.css('width'));
+                $rightPaneContainer.css('flex', '1 1 0%');
+
+                let isResizing = false;
+                let startXAtResize, startLeftWidthPx;
+                const minPaneWidth = 200;
+
+                $resizer.on('mousedown', function (e) {
+                    e.preventDefault();
+                    isResizing = true;
+                    startXAtResize = e.clientX;
+                    startLeftWidthPx = $leftPane.width();
+
+                    $('body').css({
+                        'user-select': 'none',
+                        'cursor': 'col-resize'
+                    });
+
+                    $(document).on('mousemove.resizer', function (eMove) {
+                        if (!isResizing) return;
+
+                        const deltaX = eMove.clientX - startXAtResize;
+                        let newLeftWidth = startLeftWidthPx + deltaX;
+                        const mainWrapperWidth = $mainContentWrapper.width();
+                        const resizerWidth = $resizer.outerWidth();
+
+                        newLeftWidth = Math.max(minPaneWidth, newLeftWidth);
+                        newLeftWidth = Math.min(newLeftWidth, mainWrapperWidth - minPaneWidth - resizerWidth);
+
+                        $leftPane.css('flex', `0 0 ${newLeftWidth}px`);
+
+                        fitTerminal();
+                        if (monacoEditor && $xmlshotView.is(':visible')) {
+                            monacoEditor.layout();
+                        }
+                    });
+
+                    $(document).on('mouseup.resizer', function () {
+                        if (!isResizing) return;
+                        isResizing = false;
+                        $(document).off('mousemove.resizer mouseup.resizer');
+                        $('body').css({
+                            'user-select': '',
+                            'cursor': ''
+                        });
+                        fitTerminal();
+                        if (monacoEditor && $xmlshotView.is(':visible')) {
+                            monacoEditor.layout();
+                        }
+                    });
+                });
+
+
+                // --- Terminal Setup ---
+                const term = new Terminal({
+                    cursorBlink: true, convertEol: true, fontSize: 14,
+                    fontFamily: '"Cascadia Code", "Courier New", sans-serif',
+                    theme: {
+                        background: '#1e1e1e', foreground: '#d4d4d4', cursor: '#e0e0e0',
+                        cursorAccent: '#1e1e1e', selectionBackground: '#525252', selectionForeground: '#e0e0e0',
+                        black: '#1e1e1e', red: '#f47067', green: '#6ab023', yellow: '#f5d000',
+                        blue: '#3b82f6', magenta: '#d946ef', cyan: '#22d3ee', white: '#e5e5e5',
+                        brightBlack: '#7f7f7f', brightRed: '#ff8980', brightGreen: '#89cc4a',
+                        brightYellow: '#fff030', brightBlue: '#5fa0ff', brightMagenta: '#f062fc',
+                        brightCyan: '#40e0fb', brightWhite: '#ffffff'
+                    },
+                    allowProposedApi: true
+                });
+                const fitAddon = new FitAddon.FitAddon();
+                term.loadAddon(fitAddon);
+                term.open($terminalDomElement);
+
+                function fitTerminal() {
+                    try { fitAddon.fit(); } catch (e) { /* console.warn("FitAddon error:", e); */ }
+                }
+
+                let resizeTimer;
+                $(window).on('resize', () => {
+                    clearTimeout(resizeTimer);
+                    fitTerminal();
+                    resizeTimer = setTimeout(() => {
+                        if (monacoEditor && $xmlshotView.is(':visible')) {
+                            monacoEditor.layout();
+                        }
+                    }, 100);
+                });
+
+                const prompt = '[\x1b[34momni-devserver\x1b[0m]$ ';
+                term.writeln('Welcome to \x1b[1;33mOmni DevServer Playground Terminal\x1b[0m!\n');
+                term.writeln(' ┌ \x1b[1mFeatures\x1b[0m ─────────────────────────────────────────┐');
+                term.writeln(' │                                                   │');
+                term.writeln(' │  ❓  Type \x1b[36mhelp\x1b[0m for available commands.             │');
+                term.writeln(' │  📸  Use \x1b[36mscreenshot\x1b[0m or \x1b[36mxmlshot\x1b[0m to fetch views.     │');
+                term.writeln(' │  ✔️  Press \x1b[33mTab\x1b[0m to autocomplete commands.           │');
+                term.writeln(' │  📌  Click screenshot to get pointer coordinates.  │');
+                term.writeln(' │  ⬆️  Press \x1b[33mArrow-Up\x1b[0m to recall the last command.    │');
+                term.writeln(' │                                                   │');
+                term.writeln(' └───────────────────────────────────────────────────┘\n');
+
+                // --- Screenshot Fetching Logic ---
+                async function fetchAndUpdateScreenshot(record = false) {
+                    $coordsDisplay.text('Fetching screenshot...');
+                    imageLoaded = false;
+                    try {
+                        const response = await fetch(`captureScreenshotImage?record=${record}`);
+                        if (!response.ok) {
+                            let errorMsg = `HTTP error! Status: ${response.status}`;
+                            try { const errorBody = await response.text(); errorMsg += `, Body: ${errorBody.substring(0, 100)}`; } catch (e) {/*ignore*/ }
+                            throw new Error(errorMsg);
+                        }
+
+                        const responseData = await response.json();
+                        if (!responseData.success || !responseData.data.imageBase64 || !responseData.data.imageBase64.startsWith('data:image')) {
+                            throw new Error(responseData.message || 'Invalid response format');
+                        }
+                        screenshotImg.src = responseData.data.imageBase64;
+                        delete responseData.data.imageBase64;
+                        return responseData;
+                    } catch (error) {
+                        console.error('Failed to fetch or process screenshot:', error);
+                        screenshotImg.src = "static/placeholder.png#fetchError";
+                        $coordsDisplay.text('API Error! Screenshot');
+                        imageLoaded = false;
+                        throw error;
+                    }
+                }
+
+
+                // --- XML Data Fetching Logic ---
+                async function fetchAndUpdateXmlshot(record = false) {
+                    if (!monacoEditor) {
+                        throw new Error('Monaco editor not ready for XML.');
+                    }
+                    try {
+                        const response = await fetch('captureScreenshotXml?record=${record}');
+                        if (!response.ok) {
+                            let errorMsg = `HTTP error! Status: ${response.status}`;
+                            try {
+                                const errorBody = await response.text();
+                                errorMsg += `, Body: ${errorBody.substring(0, 100)}`;
+                            } catch (e) {/*ignore*/ }
+                            throw new Error(errorMsg);
+                        }
+
+                        const responseData = await response.json();
+                        if (!responseData.success || !responseData.data.xml) {
+                            throw new Error(responseData.message || 'Invalid response format');
+                        }
+                        const formattedXmlData = html_beautify(responseData.data.xml, {
+                            indent_size: 2
+                        });
+
+                        monacoEditor.setValue(formattedXmlData || '<!-- No XML content received -->');
+                        return { success: responseData.success, message: responseData.message || 'XML data updated successfully' };
+                    } catch (error) {
+                        console.error('Failed to fetch or process XML:', error);
+                        monacoEditor.setValue(`<!-- Error loading XML: ${error.message} -->`);
+                        throw error;
+                    }
+                }
+
+                // --- Polling for automatic updates ---
+                async function pollForUpdates() {
+                    try {
+                        const response = await fetch('/timestamps');
+                        if (!response.ok) {
+                            // Silently fail, this is a background task
+                            return;
+                        }
+                        const serverTimestamps = await response.json();
+
+                        // Check for screenshot update if the server has a timestamp
+                        if (serverTimestamps.screenshot > 0 && serverTimestamps.screenshot != lastKnownScreenshotTimestamp) {
+                            await fetchAndUpdateScreenshot(); // This function already updates the UI
+                            lastKnownScreenshotTimestamp = serverTimestamps.screenshot;
+                        }
+
+                        // Check for XML update if the server has a timestamp and editor is ready
+                        if (monacoEditor && serverTimestamps.xml > 0 && serverTimestamps.xml != lastKnownXmlTimestamp) {
+                            await fetchAndUpdateXmlshot(); // This function already updates the UI
+                            lastKnownXmlTimestamp = serverTimestamps.xml;
+                        }
+
+                    } catch (error) {
+                        // Silently fail on error
+                    }
+                }
+
+                // --- Image Event Handlers ---
+                $(screenshotImg).on('load', function () {
+                    if (this.src.includes("#fetchError") || (this.src.startsWith("static/placeholder.png") && this.naturalWidth <= 1 && this.naturalHeight <= 1)) {
+                        naturalWidth = 0; naturalHeight = 0; imageLoaded = false;
+                        if ($screenshotView.is(':visible')) $coordsDisplay.show();
+                        return;
+                    }
+                    naturalWidth = this.naturalWidth; naturalHeight = this.naturalHeight;
+                    if (naturalWidth > 0 && naturalHeight > 0) {
+                        imageLoaded = true;
+                        $coordsDisplay.text('X: -, Y: -');
+                    } else {
+                        imageLoaded = false;
+                        $coordsDisplay.text('Loaded image invalid');
+                    }
+                    if ($screenshotView.is(':visible')) $coordsDisplay.show();
+                }).on('error', function () {
+                    imageLoaded = false; naturalWidth = 0; naturalHeight = 0;
+                    if (!$coordsDisplay.text().includes("API Error") && !$coordsDisplay.text().includes("Fetching")) {
+                        $coordsDisplay.text('Screenshot display error!');
+                    }
+                    if ($screenshotView.is(':visible')) $coordsDisplay.show();
+                });
+
+                if (screenshotImg.complete) {
+                    $(screenshotImg).trigger(screenshotImg.naturalWidth && screenshotImg.naturalWidth > 0 && !screenshotImg.src.includes("#fetchError") ? 'load' : 'error');
+                }
+
+                // --- Coordinate Calculation ---
+                function getOriginalCoordinates(event) {
+                    if (!imageLoaded || naturalWidth === 0 || naturalHeight === 0) {
+                        return { x: null, y: null, outOfBounds: true, message: 'Image not ready' };
+                    }
+                    const rect = screenshotImg.getBoundingClientRect();
+                    const cssWidth = rect.width;
+                    const cssHeight = rect.height;
+                    if (cssWidth === 0 || cssHeight === 0) {
+                        return { x: null, y: null, outOfBounds: true, message: 'Image not visible' };
+                    }
+                    const naturalAspectRatio = naturalWidth / naturalHeight;
+                    const cssAspectRatio = cssWidth / cssHeight;
+                    let renderedImageWidth, renderedImageHeight, offsetXInBox = 0, offsetYInBox = 0;
+                    if (naturalAspectRatio > cssAspectRatio) {
+                        renderedImageWidth = cssWidth;
+                        renderedImageHeight = cssWidth / naturalAspectRatio;
+                        offsetYInBox = (cssHeight - renderedImageHeight) / 2;
+                    } else {
+                        renderedImageHeight = cssHeight;
+                        renderedImageWidth = cssHeight * naturalAspectRatio;
+                        offsetXInBox = (cssWidth - renderedImageWidth) / 2;
+                    }
+                    const cursorXRelativeToBox = event.clientX - rect.left;
+                    const cursorYRelativeToBox = event.clientY - rect.top;
+                    let cursorXOnRenderedImage = cursorXRelativeToBox - offsetXInBox;
+                    let cursorYOnRenderedImage = cursorYRelativeToBox - offsetYInBox;
+                    if (cursorXOnRenderedImage < 0 || cursorXOnRenderedImage > renderedImageWidth ||
+                        cursorYOnRenderedImage < 0 || cursorYOnRenderedImage > renderedImageHeight) {
+                        return { x: null, y: null, outOfBounds: true, message: 'Out of image bounds' };
+                    }
+                    cursorXOnRenderedImage = Math.max(0, Math.min(cursorXOnRenderedImage, renderedImageWidth));
+                    cursorYOnRenderedImage = Math.max(0, Math.min(cursorYOnRenderedImage, renderedImageHeight));
+                    const scale = (renderedImageWidth > 0.001) ? (naturalWidth / renderedImageWidth) : 1;
+                    let finalX = Math.round(cursorXOnRenderedImage * scale);
+                    let finalY = Math.round(cursorYOnRenderedImage * scale);
+                    finalX = Math.max(0, Math.min(finalX, naturalWidth));
+                    finalY = Math.max(0, Math.min(finalY, naturalHeight));
+                    return { x: finalX, y: finalY, outOfBounds: false };
+                }
+
+                $screenshot.on('mousemove', function (event) {
+                    const coords = getOriginalCoordinates(event);
+                    if (coords.outOfBounds) {
+                        if (imageLoaded) $coordsDisplay.text('X: -, Y: -');
+                    } else {
+                        $coordsDisplay.text(`X: ${coords.x}, Y: ${coords.y}`);
+                    }
+                });
+                $screenshot.on('mouseleave', function () {
+                    if (imageLoaded) $coordsDisplay.text('X: -, Y: -');
+                });
+                $screenshot.on('click', function (event) {
+                    const coords = getOriginalCoordinates(event);
+                    if (!coords.outOfBounds && coords.x !== null && coords.y !== null) {
+                        const coordTextForTerminal = `${coords.x} ${coords.y}`;
+                        let textToAppendToTerminal = coordTextForTerminal;
+
+                        if (currentCommand.length > 0 && currentCommand[currentCommand.length - 1] !== ' ') {
+                            textToAppendToTerminal = ' ' + coordTextForTerminal;
+                        }
+
+                        currentCommand += textToAppendToTerminal;
+                        term.write(textToAppendToTerminal);
+                        term.focus();
+                    }
+                });
+
+                // --- View Switching Logic ---
+                function updateTabStyles(activeTabId) {
+                    if (activeTabId === 'screenshot') {
+                        $tabScreenshot.addClass('active');
+                        $tabXmlshot.removeClass('active');
+                    } else if (activeTabId === 'xmlshot') {
+                        $tabXmlshot.addClass('active');
+                        $tabScreenshot.removeClass('active');
+                    }
+                }
+
+                function switchToScreenshotView() {
+                    $xmlshotView.hide();
+                    $screenshotView.show();
+                    if ($screenshotView.is(':visible')) {
+                        if (imageLoaded) $coordsDisplay.show();
+                        else if ($coordsDisplay.text() !== 'X: -, Y: -') $coordsDisplay.show();
+                        else $coordsDisplay.hide();
+                    } else {
+                        $coordsDisplay.hide();
+                    }
+                    updateTabStyles('screenshot');
+                }
+
+                async function switchToXmlView(refreshData = false) {
+                    $screenshotView.hide();
+                    $coordsDisplay.hide();
+                    $xmlshotView.show();
+                    updateTabStyles('xmlshot');
+
+                    let needsFetch = refreshData;
+                    if (!refreshData && monacoEditor && (!monacoEditor.getValue() || monacoEditor.getValue().includes('<!-- Initializing XML view... -->') || monacoEditor.getValue().includes('<!-- XML content will load here -->'))) {
+                        needsFetch = true;
+                    }
+
+                    if (needsFetch && monacoEditor) {
+                        try {
+                            await fetchAndUpdateXmlshot();
+                        } catch (e) { }
+                    }
+
+                    if (monacoEditor) {
+                        monacoEditor.layout();
+                    }
+                }
+
+                // --- Dynamic Command Fetching and Execution ---
+                async function fetchCommands() {
+                    try {
+                        const response = await fetch('commands');
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch commands: ${response.status}`);
+                        }
+                        const data = await response.json();
+                        if (Array.isArray(data)) {
+                            return data.filter(cmd => (
+                                cmd.name !== "captureScreenshotImage" &&
+                                cmd.name !== "captureScreenshotXml"
+                            )).map(cmd => ({
+                                name: cmd.name,
+                                description: cmd.description || 'No description available',
+                                argNames: cmd.argNames || []
+                            }));
+                        } else {
+                            throw new Error('Invalid command data format');
+                        }
+                    } catch (error) {
+                        console.error('Error fetching commands:', error);
+                        return [];
+                    }
+                }
+
+                function splitCommandParts(command) {
+                    const result = [];
+                    let current = '';
+                    let inQuote = false;
+                    let quoteChar = null;
+                    let escapeNext = false;
+
+                    for (let i = 0; i < command.length; i++) {
+                        const char = command[i];
+
+                        if (escapeNext) {
+                            current += char;
+                            escapeNext = false;
+                            continue;
+                        }
+
+                        if (char === '\\') {
+                            escapeNext = true;
+                            continue;
+                        }
+
+                        if (char === '"' || char === "'") {
+                            if (inQuote) {
+                                if (char === quoteChar) {
+                                    inQuote = false;
+                                    quoteChar = null;
+                                    continue;
+                                }
+                            } else {
+                                inQuote = true;
+                                quoteChar = char;
+                                continue;
+                            }
+                        }
+
+                        if (!inQuote && (char === ' ' || char === '\t')) {
+                            if (current.length > 0) {
+                                result.push(current);
+                                current = '';
+                            }
+                        } else {
+                            current += char;
+                        }
+                    }
+
+                    if (current.length > 0) {
+                        result.push(current);
+                    }
+
+                    return result;
+                }
+
+                function matchCommand(cmdText) {
+                    const parts = splitCommandParts(cmdText);
+                    const name = parts[0];
+                    const args = parts.slice(1);
+                    const command = commands.find(c => c.name.toLowerCase() === name.toLowerCase());
+                    if (command) {
+                        return {
+                            name: command.name,
+                            args: args.length > 0 ? args : [],
+                            argNames: command.argNames || []
+                        };
+                    }
+                    return null;
+                }
+
+                function matchCommandPrefix(cmdText) {
+                    const fullCommands = [
+                        ...commands.map(c => c.name.toLowerCase()),
+                        'screenshot', 'xmlshot', 'clear', 'help', 'apidoc', 'apiclient'
+                    ];
+                    return fullCommands.filter(cmd => cmd.startsWith(cmdText.toLowerCase()))
+                }
+
+                async function executeCommand(name, args, argNames) {
+                    if (args.length !== argNames.length) {
+                        throw new Error(`Command ${name} expects ${argNames.length} arguments (${argNames.join(', ')}), but got ${args.length}.`);
+                    }
+                    const url = `${name}?${argNames.map((arg, index) => `${arg}=${encodeURIComponent(args[index])}`).join('&')}`;
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        let errorMsg = `Status ${response.status}`;
+                        try {
+                            const errorBody = await response.text();
+                            errorMsg += `, ${errorBody.substring(0, 100)}`;
+                        } catch (e) { }
+                        throw new Error(errorMsg);
+                    }
+                    const responseJson = await response.json();
+                    return responseJson;
+                }
+
+                function writeListInstalledApplicationsResult(applicationNames, packageNames) {
+                    // Helper function to calculate the visual width of a string in a terminal.
+                    // CJK and other full-width characters count as 2, others as 1.
+                    const getVisualLength = (str) => {
+                        let width = 0;
+                        for (let i = 0; i < str.length; i++) {
+                            const charCode = str.charCodeAt(i);
+                            // A simple but effective check for most full-width characters.
+                            // This covers CJK, full-width forms, and more.
+                            if (charCode >= 0x1100 && (
+                                    (charCode >= 0x1100 && charCode <= 0x115F) || // Hangul Jamo
+                                    (charCode >= 0x2E80 && charCode <= 0xA4CF) || // CJK Radicals, Ideographs, etc.
+                                    (charCode >= 0xAC00 && charCode <= 0xD7A3) || // Hangul Syllables
+                                    (charCode >= 0xF900 && charCode <= 0xFAFF) || // CJK Compatibility Ideographs
+                                    (charCode >= 0xFE10 && charCode <= 0xFE19) || // Vertical Forms
+                                    (charCode >= 0xFE30 && charCode <= 0xFE6F) || // CJK Compatibility Forms
+                                    (charCode >= 0xFF00 && charCode <= 0xFF60) || // Full-width Forms
+                                    (charCode >= 0xFFE0 && charCode <= 0xFFE6)
+                                )) {
+                                width += 2;
+                            } else {
+                                width += 1;
+                            }
+                        }
+                        return width;
+                    };
+
+                    // Helper function to pad a string to a target visual width.
+                    const padVisualEnd = (str, targetLength, padChar = ' ') => {
+                        const currentWidth = getVisualLength(str);
+                        const neededPadding = Math.max(0, targetLength - currentWidth);
+                        return str + padChar.repeat(neededPadding);
+                    };
+
+                    if (!applicationNames || applicationNames.length === 0) {
+                        term.writeln('\x1b[1;33mNo installed applications found.\x1b[0m\n');
+                        return;
+                    }
+
+                    // --- Configuration ---
+                    const header1 = 'Application Name';
+                    const header2 = 'Package Name';
+                    const padding = 2; // Spaces on one side of the content
+
+                    // --- Calculate Column Widths based on visual length ---
+                    const maxVisualAppNameWidth = Math.max(
+                        getVisualLength(header1),
+                        ...applicationNames.map(name => getVisualLength(name || ''))
+                    );
+                    const maxVisualPkgNameWidth = Math.max(
+                        getVisualLength(header2),
+                        ...packageNames.map(name => getVisualLength(name || ''))
+                    );
+
+                    const appNameColWidth = maxVisualAppNameWidth + padding;
+                    const pkgNameColWidth = maxVisualPkgNameWidth + padding;
+
+                    // --- Color Definitions ---
+                    const border_color = '\x1b[90m'; // Bright Black (Gray)
+                    const header_text_color = '\x1b[1;33m'; // Bold Yellow
+                    const app_name_color = '\x1b[36m'; // Cyan
+                    const pkg_name_color = '\x1b[37m'; // White
+                    const reset_color = '\x1b[0m';
+
+                    // --- Helper function for creating lines using box-drawing characters ---
+                    const createLine = (left, middle, right) => {
+                        const line = left + '─'.repeat(appNameColWidth) + middle + '─'.repeat(pkgNameColWidth) + right;
+                        return `${border_color}${line}${reset_color}`;
+                    };
+
+                    // --- Create Table Parts ---
+                    const topBorder = createLine('┌', '-┬-', '┐');
+                    const headerSeparator = createLine('├', '-┼-', '┤');
+                    const bottomBorder = createLine('└', '-┴-', '┘');
+                    const vertical_sep = `${border_color}│${reset_color}`;
+
+                    // --- Print Table ---
+                    term.writeln(''); // Add some space before the table
+                    term.writeln(topBorder);
+
+                    // Print Header
+                    const paddedHeader1 = padVisualEnd(header1, maxVisualAppNameWidth);
+                    const paddedHeader2 = padVisualEnd(header2, maxVisualPkgNameWidth);
+                    term.writeln(`${vertical_sep} ${header_text_color}${paddedHeader1}${' '.repeat(padding)}${reset_color}${vertical_sep} ${header_text_color}${paddedHeader2}${' '.repeat(padding)}${reset_color}${vertical_sep}`);
+
+                    term.writeln(headerSeparator);
+
+                    // Print Body
+                    for (let i = 0; i < applicationNames.length; i++) {
+                        const appName = applicationNames[i] || 'N/A';
+                        const pkgName = packageNames[i] || 'N/A';
+                        const paddedAppName = padVisualEnd(appName, maxVisualAppNameWidth);
+                        const paddedPkgName = padVisualEnd(pkgName, maxVisualPkgNameWidth);
+
+                        term.writeln(`${vertical_sep} ${app_name_color}${paddedAppName}${' '.repeat(padding)}${reset_color}${vertical_sep} ${pkg_name_color}${paddedPkgName}${' '.repeat(padding)}${reset_color}${vertical_sep}`);
+                    }
+
+                    term.writeln(bottomBorder);
+                    term.writeln(''); // Add some space after the table
+                }
+
+
+                function writeCommandResult(result) {
+                    if (result.success) {
+                        if (result.message && result.message.startsWith("List Installed Applications")) {
+                            writeListInstalledApplicationsResult(result.data.applicationNames, result.data.packageNames);
+                            return;
+                        }
+                        term.writeln(`\x1b[32m${JSON.stringify(result, null, 2)}\x1b[0m\n`);
+                    } else {
+                        term.writeln(`\x1b[33m${JSON.stringify(result, null, 2)}\x1b[0m\n`);
+                    }
+                }
+
+                let currentCommand = '';
+                let lastCommand = '';
+                async function processCommand(commandToProcess) {
+                    if (commandToProcess.length === 0) {
+                        return;
+                    }
+
+                    const cmdParts = commandToProcess.split(' ');
+                    const cmdName = cmdParts[0].toLowerCase();
+
+                    if (cmdName === 'screenshot' || cmdName === 's') {
+                        try {
+                            const responseJson = await fetchAndUpdateScreenshot();
+                            switchToScreenshotView();
+                            writeCommandResult(responseJson);
+                        } catch (error) {
+                            term.writeln(`\x1b[31mError fetching screenshot: ${error.message}\x1b[0m\n`);
+                        }
+                    } else if (cmdName === 'xmlshot' || cmdName === 'x') {
+                        try {
+                            const responseJson = await fetchAndUpdateXmlshot();
+                            switchToXmlView(true);
+                            writeCommandResult(responseJson);
+                        } catch (error) {
+                            term.writeln(`\x1b[31mError fetching XML: ${error.message}\x1b[0m\n`);
+                        }
+                    } else if (cmdName === 'clear') {
+                        term.clear();
+                    } else if (cmdName === 'help') {
+                        term.writeln("Available commands:");
+                        term.writeln("  \x1b[36mscreenshot\x1b[0m or \x1b[36ms\x1b[0m - Fetch and update the screenshot.");
+                        term.writeln("  \x1b[36mxmlshot\x1b[0m or \x1b[36mx\x1b[0m - Fetch XML and update the XML view.");
+                        term.writeln("  \x1b[36mapidoc\x1b[0m - Open API documentation in a new tab.");
+                        term.writeln("  \x1b[36mapiclient\x1b[0m - Open generated python API client in a new tab.");
+                        term.writeln("  \x1b[36mclear\x1b[0m - Clear the terminal screen.");
+                        term.writeln("  \x1b[36mhelp\x1b[0m - Show this help message.");
+                        if (typeof commands !== 'undefined' && Array.isArray(commands)) {
+                            commands.forEach(command => {
+                                term.writeln(`  \x1b[36m${command.name} ${command.argNames.map(arg => `<${arg}>`).join(' ')}\x1b[0m - ${command.description}`);
+                            });
+                        }
+                        term.writeln("");
+                    } else if (cmdName === 'apidoc') {
+                        window.open('redoc', '_blank');
+                    } else if (cmdName === 'apiclient') {
+                        window.open('client', '_blank');
+                    } else {
+                        const matchedDynamicCommand = matchCommand(commandToProcess);
+                        if (matchedDynamicCommand) {
+                            try {
+                                const responseJson = await executeCommand(matchedDynamicCommand.name, matchedDynamicCommand.args, matchedDynamicCommand.argNames);
+                                writeCommandResult(responseJson);
+                            } catch (error) {
+                                term.writeln(`\x1b[31mError executing '${matchedDynamicCommand.name}': ${error.message}\x1b[0m\n`);
+                            }
+                        } else {
+                            term.writeln(`\x1b[31mUnknown command\x1b[0m: ${commandToProcess}\n`);
+                        }
+                    }
+                }
+
+
+                term.onData(async (data) => {
+                    const charCode = data.charCodeAt(0);
+
+                    if (charCode === 13) {
+                        term.writeln('');
+                        const commandToProcess = currentCommand.trim();
+                        currentCommand = '';
+                        lastCommand = commandToProcess;
+                        await processCommand(commandToProcess);
+                        term.write(prompt);
+                    } else if (charCode === 127 || charCode === 8) {
+                        if (currentCommand.length > 0) {
+                            term.write('\b \b');
+                            const cjkScriptsRegex = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+                            const lastChar = currentCommand.slice(-1);
+                            if (cjkScriptsRegex.test(lastChar)) {
+                                term.write('\b \b');
+                            }
+                            currentCommand = currentCommand.slice(0, -1);
+                        }
+                    } else if (charCode < 32 && data !== '\t') {
+                        return;
+                    } else if (data === '\t') {
+                        return;
+                    }
+                    else {
+                        currentCommand += data;
+                        term.write(data);
+                    }
+                });
+
+                term.onKey(({ key, domEvent }) => {
+                    if (domEvent.key === 'Tab') {
+                        domEvent.preventDefault();
+
+                        const currentCommandTrimmed = currentCommand.trimStart();
+                        const lastSpaceIndex = currentCommandTrimmed.lastIndexOf(' ');
+                        const currentWord = lastSpaceIndex === -1 ? currentCommandTrimmed : currentCommandTrimmed.substring(lastSpaceIndex + 1);
+
+                        const potentialMatches = matchCommandPrefix(currentWord);
+
+                        if (potentialMatches.length === 1) {
+                            const completion = potentialMatches[0];
+                            const textToAppend = completion.substring(currentWord.length);
+
+                            term.write(textToAppend);
+                            currentCommand += textToAppend;
+                        } else if (potentialMatches.length > 1) {
+                            term.writeln('');
+                            term.writeln(potentialMatches.join('  '));
+                            term.write(prompt + currentCommand);
+                        }
+                    }
+                    if (domEvent.key === 'ArrowUp') {
+                        domEvent.preventDefault();
+                        if (lastCommand) {
+                            term.write('\r\x1b[K');
+                            currentCommand = lastCommand;
+                            term.write(prompt + currentCommand);
+                        }
+                    }
+
+                    if (domEvent.ctrlKey && domEvent.key === 'u') {
+                        domEvent.preventDefault();
+                        term.write('\r\x1b[K');
+                        currentCommand = '';
+                        term.write(prompt);
+                    }
+                });
+
+                // --- Initialize Application ---
+                function initializeApp() {
+                    switchToScreenshotView();
+
+                    $tabScreenshot.on('click', switchToScreenshotView);
+                    $tabXmlshot.on('click', () => switchToXmlView(false));
+
+                    // The polling mechanism will now handle the initial data load.
+                    // We run it once immediately and then set it on an interval.
+                    pollForUpdates();
+                    setInterval(pollForUpdates, 1000);
+
+                    // Fetch dynamic commands as before
+                    fetchCommands().then(fetchedCmds => {
+                        commands.length = 0;
+                        commands.push(...fetchedCmds);
+                        if (commands.length > 0) {
+                            term.writeln(`\x1b[1;33mLoaded ${commands.length} dynamic commands from server.\x1b[0m\n`);
+                        } else {
+                            term.writeln('\x1b[1;33mNo dynamic commands available from server.\x1b[0m\n');
+                        }
+                    }).catch(error => {
+                        term.writeln(`\x1b[31mError fetching dynamic commands: ${error.message}\x1b[0m\n`);
+                    }).finally(() => {
+                        term.write(prompt);
+                        term.focus();
+                    });
+
+                    fitTerminal();
+                    setTimeout(fitTerminal, 150);
+                }
+
+                // --- Load Monaco Editor and then Initialize App ---
+                require.config({ paths: { 'vs': 'static/vendor/monaco/vs' } });
+                require(['vs/editor/editor.main'], function () {
+                    monacoEditor = monaco.editor.create($monacoContainer[0], {
+                        value: '<!-- Initializing XML view... -->',
+                        language: 'xml',
+                        theme: 'vs-dark',
+                        readOnly: false,
+                        automaticLayout: true,
+                        minimap: { enabled: false },
+                        wordWrap: 'on'
+                    });
+                    initializeApp();
+                }, function (error) {
+                    console.error("Failed to load Monaco Editor:", error);
+                    term.writeln("\x1b[31mFATAL: Failed to load Monaco Editor. XML view will not be available.\x1b[0m");
+                    $tabXmlshot.prop('disabled', true).css({ 'opacity': 0.5, 'pointer-events': 'none', 'background-color': '#2D3748' });
+                    initializeApp();
+                });
+            });
+        </script>
+
+    </body>
+
+</html>
