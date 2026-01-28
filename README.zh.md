@@ -39,7 +39,13 @@ OmniOperator 是一款 Android 应用程序，旨在通过 HTTP 请求实现对 
   - **核心价值**：为 Clawdbot 赋予 Android GUI 的可视化操作能力。
   - **适用场景**：建议仅在局域网或受信任的网络环境中使用，请避免将 DevServer 直接暴露于公网。
   - **快速入口**：`integrations/clawdbot/omni-operator/README.md`
-  - **演示**：可参考上方的 `./demo.gif`（后续将补充“聊天指令→手机执行→回传截图/反馈”的完整演示）。
+  - **演示**：
+    <table>
+      <tr>
+        <td><video src="1.mp4" controls width="100%"></video></td>
+        <td><video src="2.mp4" controls width="100%"></video></td>
+      </tr>
+    </table>
   - **与 OpenOmniCloud 的关系**：OmniOperator 定位为 OpenOmniCloud 的设备端**执行层**，同时也作为开放组件供 Clawdbot 等第三方生态集成。
 
 ## 功能特性

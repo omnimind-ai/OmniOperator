@@ -2,6 +2,15 @@
 
 通过 HTTP API 控制 Android 手机的 Clawdbot 插件。配合 OmniOperator DevServer App 使用。
 
+## 视频演示
+
+<table>
+  <tr>
+    <td><video src="../../../1.mp4" controls width="100%"></video></td>
+    <td><video src="../../../2.mp4" controls width="100%"></video></td>
+  </tr>
+</table>
+
 ## 前置要求
 
 1. Android 手机上安装并运行 **OmniOperator DevServer** App
