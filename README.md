@@ -39,7 +39,13 @@ The project includes a web-based "DevServer Playground" that can be accessed fro
   - **Core value**: brings visual Android GUI control to Clawdbot.
   - **Scope**: use only on LAN / trusted networks; do not expose DevServer to the public internet.
   - **Quickstart**: `integrations/clawdbot/omni-operator/README.md`
-  - **Demo**: see `./demo.gif` above (we will add a full “chat → device execution → screenshot/feedback” demo later).
+  - **Demo**:
+    <table>
+      <tr>
+        <td><video src="1.mp4" controls width="100%"></video></td>
+        <td><video src="2.mp4" controls width="100%"></video></td>
+      </tr>
+    </table>
   - **Relationship with OpenOmniCloud**: OmniOperator is positioned as the on-device **execution layer** for OpenOmniCloud, and is also an open component for third-party ecosystem integrations (Clawdbot is among the first).
 
 ## Features
