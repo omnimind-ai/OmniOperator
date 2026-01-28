@@ -42,8 +42,8 @@ OmniOperator 是一款 Android 应用程序，旨在通过 HTTP 请求实现对 
   - **演示**：
     <table>
       <tr>
-        <td><video src="1.mp4" controls width="100%"></video></td>
-        <td><video src="2.mp4" controls width="100%"></video></td>
+        <td><a href="1.mp4">演示 1（MP4）</a></td>
+        <td><a href="2.mp4">演示 2（MP4）</a></td>
       </tr>
     </table>
   - **与 OpenOmniCloud 的关系**：OmniOperator 定位为 OpenOmniCloud 的设备端**执行层**，同时也作为开放组件供 Clawdbot 等第三方生态集成。

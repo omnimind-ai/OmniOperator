@@ -42,8 +42,8 @@ The project includes a web-based "DevServer Playground" that can be accessed fro
   - **Demo**:
     <table>
       <tr>
-        <td><video src="1.mp4" controls width="100%"></video></td>
-        <td><video src="2.mp4" controls width="100%"></video></td>
+        <td><a href="1.mp4">Demo 1 (MP4)</a></td>
+        <td><a href="2.mp4">Demo 2 (MP4)</a></td>
       </tr>
     </table>
   - **Relationship with OpenOmniCloud**: OmniOperator is positioned as the on-device **execution layer** for OpenOmniCloud, and is also an open component for third-party ecosystem integrations (Clawdbot is among the first).
