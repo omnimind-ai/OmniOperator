@@ -12,7 +12,9 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    // Flutter plugin subprojects may declare their own repositories (from pub cache).
+    // Use project repositories preference to avoid repeated Gradle warnings.
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     val storageUrl: String = System.getenv("FLUTTER_STORAGE_BASE_URL") ?: "https://storage.googleapis.com"
     repositories {
         google()
