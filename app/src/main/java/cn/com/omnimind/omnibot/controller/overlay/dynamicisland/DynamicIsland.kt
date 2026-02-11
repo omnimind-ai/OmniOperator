@@ -18,7 +18,8 @@ class DynamicIsland(
     private val mainThreadHandler = Handler(Looper.getMainLooper())
 
     private var currentView: DynamicIslandView? = null
-    private var currentFuture: CompletableFuture<*>? = null
+    private var currentDialogueFuture: CompletableFuture<DialogueAction?>? = null
+    private var currentMessageFuture: CompletableFuture<Void?>? = null
     private var dismissRunnable: Runnable? = null
 
     private var isCurrentlyDialogue: Boolean = false
@@ -46,7 +47,7 @@ class DynamicIsland(
 
         mainThreadHandler.post {
             cleanupCurrentView() // Dismiss previous view without waiting
-            currentFuture = future
+            currentMessageFuture = future
 
             isCurrentlyDialogue = false
             currentTitle = title
@@ -79,7 +80,7 @@ class DynamicIsland(
 
         mainThreadHandler.post {
             cleanupCurrentView() // Dismiss previous view without waiting
-            currentFuture = future
+            currentDialogueFuture = future
 
             val actionHandler: (DialogueAction?) -> Unit = { chosenAction ->
                 if (!future.isDone) future.complete(chosenAction)
@@ -145,11 +146,14 @@ class DynamicIsland(
         pauseDismissTimer()
         dismissRunnable = null
 
-        if (currentFuture?.isDone == false) {
-            (currentFuture as? CompletableFuture<DialogueAction?>)?.complete(null)
-            (currentFuture as? CompletableFuture<Void?>)?.complete(null)
+        if (currentDialogueFuture?.isDone == false) {
+            currentDialogueFuture?.complete(null)
         }
-        currentFuture = null
+        if (currentMessageFuture?.isDone == false) {
+            currentMessageFuture?.complete(null)
+        }
+        currentDialogueFuture = null
+        currentMessageFuture = null
 
         // Clear state
         currentTitle = null
@@ -214,6 +218,7 @@ class DynamicIsland(
         // Not used, but required by the interface
     }
 
+    @Deprecated("Deprecated in ComponentCallbacks")
     override fun onLowMemory() {
         // Not used, but required by the interface
     }

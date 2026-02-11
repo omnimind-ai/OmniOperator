@@ -9,7 +9,6 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.GestureDetectorCompat
 import androidx.dynamicanimation.animation.DynamicAnimation
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
@@ -30,7 +29,7 @@ class DynamicIslandView(
     private val contentTextView: TextView
     private val actionsScroller: View
     private val actionsContainer: LinearLayout
-    private val gestureDetector: GestureDetectorCompat
+    private val gestureDetector: GestureDetector
 
     private var initialTouchY: Float = 0f
     private val maxDragDistancePx: Int
@@ -63,7 +62,7 @@ class DynamicIslandView(
         clipToPadding = false
 
         gestureDetector =
-            GestureDetectorCompat(
+            GestureDetector(
                 context,
                 object : GestureDetector.SimpleOnGestureListener() {
                     override fun onFling(
