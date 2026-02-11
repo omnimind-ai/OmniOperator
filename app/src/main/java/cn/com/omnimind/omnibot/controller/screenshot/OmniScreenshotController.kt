@@ -13,10 +13,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import cn.com.omnimind.omnibot.OmniOperatorService
 import cn.com.omnimind.omnibot.api.CaptureScreenshotImageData
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import java.io.ByteArrayOutputStream
@@ -60,7 +57,6 @@ class OmniScreenshotController(
     // TODO: Maybe support lower SDK versions? When takeScreenshot is not available, fallback to other methods?
     suspend fun captureScreenshotImage(): CaptureScreenshotImageData {
         screenshotMutex.lock()
-
         try {
             val result =
                 suspendCancellableCoroutine { cont ->
@@ -97,15 +93,11 @@ class OmniScreenshotController(
                         },
                     )
                 }
-
-            CoroutineScope(Dispatchers.Default).launch {
-                delay(300)
-                screenshotMutex.unlock()
-            }
+            // Throttle: prevent rapid-fire screenshot requests
+            delay(300)
             return result
-        } catch (e: Exception) {
+        } finally {
             screenshotMutex.unlock()
-            throw e
         }
     }
 
