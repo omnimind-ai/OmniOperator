@@ -23,7 +23,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "My Application"
+rootProject.name = "OpenOmniOperator"
 include(":app")
 
 val filePath = settingsDir.toString() + "/flutter_module/.android/include_flutter.groovy"

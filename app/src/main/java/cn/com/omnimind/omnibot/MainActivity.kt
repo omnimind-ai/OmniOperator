@@ -17,8 +17,8 @@ import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.launch
 
 class MainActivity : FlutterActivity() {
-    private val methodChannelName = "com.example.myapplication/dev_server"
-    private val botMessageEventChannelName = "com.example.myapplication/bot_message_events"
+    private val methodChannelName = "cn.com.omnimind.omnibot/dev_server"
+    private val botMessageEventChannelName = "cn.com.omnimind.omnibot/bot_message_events"
 
     private var omniDevServer: OmniDevServer? = null
     private val serverPort = 8080

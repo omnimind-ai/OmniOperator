@@ -19,7 +19,7 @@ import './settings_page.dart';
 
 // Define the EventChannel for bot messages
 const _botMessageEventChannel = EventChannel(
-  'com.example.myapplication/bot_message_events',
+  'cn.com.omnimind.omnibot/bot_message_events',
 );
 
 class HomePage extends StatefulWidget {
@@ -107,7 +107,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   void _updateWelcomeMessage(AppStrings strings) {
     if (_welcomeMessageId == null) return;
-    final index = _messages.indexWhere((message) => message.id == _welcomeMessageId);
+    final index = _messages.indexWhere(
+      (message) => message.id == _welcomeMessageId,
+    );
     if (index == -1) return;
     final updatedSuggestions =
         strings.initialSuggestions
@@ -187,8 +189,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (!mounted || event is! Map) return;
     final strings = AppStringsScope.of(context);
 
-    final String text =
-        event['message'] as String? ?? strings.emptyBotMessage;
+    final String text = event['message'] as String? ?? strings.emptyBotMessage;
     final String? suggestionTitle = event['suggestionTitle'] as String?;
     final List<dynamic>? rawSuggestions =
         event['suggestions'] as List<dynamic>?;
@@ -480,7 +481,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     _addMessage(Message(text: strings.devServerStartUser, sender: Sender.user));
     _addMessage(
-      Message(text: strings.devServerStarting, sender: Sender.bot, isLoading: true),
+      Message(
+        text: strings.devServerStarting,
+        sender: Sender.bot,
+        isLoading: true,
+      ),
     );
 
     String botResponse;
@@ -518,7 +523,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     _addMessage(Message(text: strings.devServerStopUser, sender: Sender.user));
     _addMessage(
-      Message(text: strings.devServerStopping, sender: Sender.bot, isLoading: true),
+      Message(
+        text: strings.devServerStopping,
+        sender: Sender.bot,
+        isLoading: true,
+      ),
     );
 
     String botResponse;

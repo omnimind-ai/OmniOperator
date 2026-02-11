@@ -8,4 +8,4 @@
     android:canPerformGestures="true"
     android:canTakeScreenshot="true"
     android:canRetrieveWindowContent="true"
-    android:settingsActivity="com.example.myapplication.MainActivity"/>
+    android:settingsActivity="cn.com.omnimind.omnibot.MainActivity"/>
