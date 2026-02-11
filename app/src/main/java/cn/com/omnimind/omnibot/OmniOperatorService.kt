@@ -22,29 +22,38 @@ class OmniOperatorService : AccessibilityService() {
     private val overlayController = OmniOverlayController(this)
     companion object {
         private const val TAG = "OmniOperatorService"
+        private const val SERVICE_NOT_RUNNING = "Accessibility service is not running."
         private var instance: OmniOperatorService? = null
 
-        suspend fun clickNode(nodeId: String) = instance!!.clickNode(nodeId)
-        suspend fun longClickNode(nodeId: String) = instance!!.longClickNode(nodeId)
-        suspend fun scrollNode(nodeId: String, direction: String) = instance!!.scrollNode(nodeId, direction)
-        suspend fun inputText(nodeId: String, text: String) = instance!!.inputText(nodeId, text)
-        suspend fun inputTextToFocusedNode(text: String) = instance!!.inputTextToFocusedNode(text)
-        suspend fun copyToClipboard(text: String) = instance!!.copyToClipboard(text)
-        suspend fun injectTextByIME(text: String) = instance!!.injectTextByIME(text)
-        suspend fun clickCoordinate(x: Float, y: Float) = instance!!.clickCoordinate(x, y)
-        suspend fun longClickCoordinate(x: Float, y: Float) = instance!!.longClickCoordinate(x, y)
-        suspend fun scrollCoordinate(x: Float, y: Float, direction: String, distance: Float) = instance!!.scrollCoordinate(x, y, direction, distance)
-        suspend fun goHome() = instance!!.goHome()
-        suspend fun goBack() = instance!!.goBack()
-        suspend fun captureScreenshotImage() = instance!!.captureScreenshotImage()
-        suspend fun captureScreenshotXml() = instance!!.captureScreenshotXml()
-        suspend fun getMetadata() = instance!!.getMetadata()
-        suspend fun launchApplication(packageName: String) = instance!!.launchApplication(packageName)
-        suspend fun requireUserConfirmation(prompt: String) = instance!!.requireUserConfirmation(prompt)
-        suspend fun requireUserChoice(prompt: String, options: List<String>) = instance!!.requireUserChoice(prompt, options)
-        suspend fun listInstalledApplications() = instance!!.listInstalledApplications()
-        suspend fun showMessage(title: String, content: String) = instance!!.showMessage(title, content)
-        suspend fun pushMessageToBot(message: String, suggestionTitle: String?, suggestions: List<String>?) = instance!!.pushMessageToBot(message, suggestionTitle, suggestions)
+        private suspend fun <T> requireService(
+            block: suspend OmniOperatorService.() -> BaseOperatorResult<T>,
+        ): BaseOperatorResult<T> {
+            val service = instance
+                ?: return BaseOperatorResult(success = false, message = SERVICE_NOT_RUNNING)
+            return service.block()
+        }
+
+        suspend fun clickNode(nodeId: String) = requireService { clickNode(nodeId) }
+        suspend fun longClickNode(nodeId: String) = requireService { longClickNode(nodeId) }
+        suspend fun scrollNode(nodeId: String, direction: String) = requireService { scrollNode(nodeId, direction) }
+        suspend fun inputText(nodeId: String, text: String) = requireService { inputText(nodeId, text) }
+        suspend fun inputTextToFocusedNode(text: String) = requireService { inputTextToFocusedNode(text) }
+        suspend fun copyToClipboard(text: String) = requireService { copyToClipboard(text) }
+        suspend fun injectTextByIME(text: String) = requireService { injectTextByIME(text) }
+        suspend fun clickCoordinate(x: Float, y: Float) = requireService { clickCoordinate(x, y) }
+        suspend fun longClickCoordinate(x: Float, y: Float) = requireService { longClickCoordinate(x, y) }
+        suspend fun scrollCoordinate(x: Float, y: Float, direction: String, distance: Float) = requireService { scrollCoordinate(x, y, direction, distance) }
+        suspend fun goHome() = requireService { goHome() }
+        suspend fun goBack() = requireService { goBack() }
+        suspend fun captureScreenshotImage() = requireService { captureScreenshotImage() }
+        suspend fun captureScreenshotXml() = requireService { captureScreenshotXml() }
+        suspend fun getMetadata() = requireService { getMetadata() }
+        suspend fun launchApplication(packageName: String) = requireService { launchApplication(packageName) }
+        suspend fun requireUserConfirmation(prompt: String) = requireService { requireUserConfirmation(prompt) }
+        suspend fun requireUserChoice(prompt: String, options: List<String>) = requireService { requireUserChoice(prompt, options) }
+        suspend fun listInstalledApplications() = requireService { listInstalledApplications() }
+        suspend fun showMessage(title: String, content: String) = requireService { showMessage(title, content) }
+        suspend fun pushMessageToBot(message: String, suggestionTitle: String?, suggestions: List<String>?) = requireService { pushMessageToBot(message, suggestionTitle, suggestions) }
         fun isAccessibilityServiceEnabled() = instance != null
     }
 
