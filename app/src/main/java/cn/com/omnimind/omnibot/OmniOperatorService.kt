@@ -313,7 +313,6 @@ class OmniOperatorService : AccessibilityService() {
     private suspend fun showMessage(title: String, content: String): ShowMessageResult =
         executeOperation("Show Message") {
             overlayController.showDynamicIslandMessage(title, content)
-            ShowMessageResult(success = true, message = "Message shown successfully.")
         }
         
     private suspend fun pushMessageToBot(message: String, suggestionTitle: String?, suggestions: List<String>?): PushMessageToBotResult =
