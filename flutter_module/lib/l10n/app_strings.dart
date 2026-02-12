@@ -61,10 +61,6 @@ class AppStrings {
       _isZh ? '例如：192.168.1.100:5000' : 'e.g., 192.168.1.100:5000';
   String get serverIpDialogHint =>
       _isZh ? '例如：example.local:5000' : 'example.local:5000';
-  String get saveButton => _isZh ? '保存' : 'Save';
-  String get savingButton => _isZh ? '保存中...' : 'Saving...';
-  String serverAddressSaved(String ip) =>
-      _isZh ? '服务器地址已保存：$ip' : 'Server address saved: $ip';
   String get serverAddressEmpty =>
       _isZh ? '请输入服务器地址' : 'Please enter a server address';
   String get serverAddressNeedPort =>
@@ -96,8 +92,6 @@ class AppStrings {
   String get devServerApiKeyLabel => _isZh ? 'API Key' : 'API Key';
   String get devServerApiKeyHint =>
       _isZh ? '输入 DevServer API Key' : 'Enter DevServer API Key';
-  String get authSettingsSaved =>
-      _isZh ? '认证设置已保存' : 'Authentication settings saved';
 
   String get tryHint =>
       _isZh ? '试试：“设置明天8点的闹钟”' : 'Try: "Set an alarm for 8am tomorrow"';
