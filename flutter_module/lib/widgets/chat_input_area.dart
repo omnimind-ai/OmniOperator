@@ -91,7 +91,9 @@ class _ChatInputAreaState extends State<ChatInputArea> {
       );
     }
 
-    final String startLabel = strings.devServerStartLabel(compact: compactLabels);
+    final String startLabel = strings.devServerStartLabel(
+      compact: compactLabels,
+    );
     return InkWell(
       // Updated onTap to include haptic feedback
       onTap:
@@ -139,7 +141,7 @@ class _ChatInputAreaState extends State<ChatInputArea> {
     final hasText = widget.controller.text.trim().isNotEmpty;
     final bool compactLabels =
         MediaQuery.of(context).size.width < 360 ||
-        MediaQuery.of(context).textScaleFactor > 1.1;
+        MediaQuery.textScalerOf(context).scale(1.0) > 1.1;
 
     IconData icon;
     VoidCallback? onPressed;
@@ -251,10 +253,10 @@ class _ChatInputAreaState extends State<ChatInputArea> {
                     child: IconButton(
                       tooltip: tooltip,
                       style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
+                        backgroundColor: WidgetStateProperty.all(
                           backgroundColor,
                         ),
-                        shape: MaterialStateProperty.all(const CircleBorder()),
+                        shape: WidgetStateProperty.all(const CircleBorder()),
                       ),
                       icon: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 200),

@@ -218,9 +218,10 @@ class DynamicIsland(
         // Not used, but required by the interface
     }
 
-    @Deprecated("Deprecated in ComponentCallbacks")
+    @Suppress("DEPRECATION")
     override fun onLowMemory() {
-        // Not used, but required by the interface
+        // Deprecated since API 34; delegate to the recommended replacement
+        onTrimMemory(ComponentCallbacks2.TRIM_MEMORY_COMPLETE)
     }
 
     private fun recreateView() {
