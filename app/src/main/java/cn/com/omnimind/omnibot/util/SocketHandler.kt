@@ -25,6 +25,11 @@ object SocketHandler {
     private var mSocket: Socket? = null
     private val gson = Gson()
 
+    // Optional auth token for Socket.IO connection.
+    // When set, it is sent as part of the Socket.IO v4 handshake auth payload.
+    // The server can verify this token before allowing the connection.
+    var authToken: String? = null
+
     // --- NEW: Internal state management ---
     private val internalState =
         ConcurrentHashMap<String, Boolean>().apply {
@@ -81,6 +86,14 @@ object SocketHandler {
         val opts =
             IO.Options().apply {
                 reconnection = false
+                // If an auth token is configured, include it in the
+                // Socket.IO v4 handshake so the server can verify it
+                // before accepting the connection.
+                val token = authToken
+                if (!token.isNullOrBlank()) {
+                    auth = mapOf("token" to token)
+                    OmniLog.i("SocketHandler", "Auth token configured for connection.")
+                }
             }
 
         try {

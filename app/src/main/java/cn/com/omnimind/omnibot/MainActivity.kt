@@ -120,6 +120,20 @@ class MainActivity : FlutterActivity() {
                     SocketHandler.setFinishedBrowsing(finished)
                     result.success(null)
                 }
+                "setSocketAuthToken" -> {
+                    val token = call.argument<String>("token")
+                    SocketHandler.authToken =
+                        if (token.isNullOrBlank()) null else token
+                    OmniLog.v(TAG, "Socket.IO auth token updated.")
+                    result.success(null)
+                }
+                "setDevServerApiKey" -> {
+                    val key = call.argument<String>("apiKey")
+                    DevServerManager.apiKey =
+                        if (key.isNullOrBlank()) null else key
+                    OmniLog.v(TAG, "DevServer API key updated.")
+                    result.success(null)
+                }
                 else -> {
                     result.notImplemented()
                 }

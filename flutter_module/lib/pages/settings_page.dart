@@ -27,17 +27,30 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _serverIpController;
+  late final TextEditingController _socketAuthTokenController;
+  late final TextEditingController _devServerApiKeyController;
   // Use a consistent key across the app.
   static const String _serverIpKey = 'server_ip_address';
+  static const String _socketAuthEnabledKey = 'socket_auth_enabled';
+  static const String _socketAuthTokenKey = 'socket_auth_token';
+  static const String _devServerAuthEnabledKey = 'dev_server_auth_enabled';
+  static const String _devServerApiKeyKey = 'dev_server_api_key';
   bool _isLoading = false;
   late bool _isCompanionModeEnabled;
   late AppLanguage _selectedLanguage;
+  bool _socketAuthEnabled = false;
+  bool _devServerAuthEnabled = false;
+  bool _obscureSocketToken = true;
+  bool _obscureDevServerKey = true;
 
   @override
   void initState() {
     super.initState();
     _serverIpController = TextEditingController();
+    _socketAuthTokenController = TextEditingController();
+    _devServerApiKeyController = TextEditingController();
     _loadServerAddress();
+    _loadAuthSettings();
     _isCompanionModeEnabled = widget.isCompanionModeEnabled;
     _selectedLanguage = widget.languageController.language;
   }
@@ -45,6 +58,8 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void dispose() {
     _serverIpController.dispose();
+    _socketAuthTokenController.dispose();
+    _devServerApiKeyController.dispose();
     super.dispose();
   }
 
@@ -69,6 +84,57 @@ class _SettingsPageState extends State<SettingsPage> {
     final serverIp = prefs.getString(_serverIpKey) ?? '';
     if (mounted) {
       _serverIpController.text = serverIp;
+    }
+  }
+
+  Future<void> _loadAuthSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _socketAuthEnabled = prefs.getBool(_socketAuthEnabledKey) ?? false;
+        _socketAuthTokenController.text =
+            prefs.getString(_socketAuthTokenKey) ?? '';
+        _devServerAuthEnabled =
+            prefs.getBool(_devServerAuthEnabledKey) ?? false;
+        _devServerApiKeyController.text =
+            prefs.getString(_devServerApiKeyKey) ?? '';
+      });
+    }
+  }
+
+  Future<void> _saveAuthSettings() async {
+    final strings = AppStringsScope.of(context);
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setBool(_socketAuthEnabledKey, _socketAuthEnabled);
+    final socketToken =
+        _socketAuthEnabled ? _socketAuthTokenController.text.trim() : '';
+    await prefs.setString(_socketAuthTokenKey, socketToken);
+
+    await prefs.setBool(_devServerAuthEnabledKey, _devServerAuthEnabled);
+    final devServerKey =
+        _devServerAuthEnabled ? _devServerApiKeyController.text.trim() : '';
+    await prefs.setString(_devServerApiKeyKey, devServerKey);
+
+    // Push values to native side via MethodChannel
+    try {
+      await platform.invokeMethod('setSocketAuthToken', {
+        'token': _socketAuthEnabled ? socketToken : '',
+      });
+      await platform.invokeMethod('setDevServerApiKey', {
+        'apiKey': _devServerAuthEnabled ? devServerKey : '',
+      });
+    } on PlatformException catch (e) {
+      debugPrint('Error pushing auth settings to native: ${e.message}');
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(strings.authSettingsSaved),
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -245,7 +311,151 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       )
                       : const Icon(Icons.save_rounded),
-              label: Text(_isLoading ? strings.savingButton : strings.saveButton),
+              label: Text(
+                _isLoading ? strings.savingButton : strings.saveButton,
+              ),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Divider(color: Colors.grey.withOpacity(0.3)),
+            const SizedBox(height: 16),
+            // --- Authentication Section ---
+            Text(
+              strings.authSectionTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              strings.authSectionSubtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Socket.IO Auth
+            Text(
+              strings.socketAuthTitle,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              strings.socketAuthSubtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(strings.socketAuthTitle),
+              value: _socketAuthEnabled,
+              onChanged:
+                  _isLoading
+                      ? null
+                      : (val) => setState(() => _socketAuthEnabled = val),
+            ),
+            if (_socketAuthEnabled)
+              TextFormField(
+                controller: _socketAuthTokenController,
+                enabled: !_isLoading,
+                obscureText: _obscureSocketToken,
+                decoration: InputDecoration(
+                  labelText: strings.socketAuthTokenLabel,
+                  hintText: strings.socketAuthTokenHint,
+                  prefixIcon: Icon(
+                    Icons.key_rounded,
+                    color: theme.primaryColor.withOpacity(0.8),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureSocketToken
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed:
+                        () => setState(
+                          () => _obscureSocketToken = !_obscureSocketToken,
+                        ),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: theme.primaryColor),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 24),
+            // DevServer Auth
+            Text(
+              strings.devServerAuthTitle,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              strings.devServerAuthSubtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(strings.devServerAuthTitle),
+              value: _devServerAuthEnabled,
+              onChanged:
+                  _isLoading
+                      ? null
+                      : (val) => setState(() => _devServerAuthEnabled = val),
+            ),
+            if (_devServerAuthEnabled)
+              TextFormField(
+                controller: _devServerApiKeyController,
+                enabled: !_isLoading,
+                obscureText: _obscureDevServerKey,
+                decoration: InputDecoration(
+                  labelText: strings.devServerApiKeyLabel,
+                  hintText: strings.devServerApiKeyHint,
+                  prefixIcon: Icon(
+                    Icons.vpn_key_rounded,
+                    color: theme.primaryColor.withOpacity(0.8),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureDevServerKey
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed:
+                        () => setState(
+                          () => _obscureDevServerKey = !_obscureDevServerKey,
+                        ),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: theme.primaryColor),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _isLoading ? null : _saveAuthSettings,
+              icon: const Icon(Icons.shield_rounded),
+              label: Text(strings.saveButton),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: const TextStyle(
