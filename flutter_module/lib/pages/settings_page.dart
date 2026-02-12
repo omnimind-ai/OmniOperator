@@ -1,5 +1,7 @@
 // lib/pages/settings_page.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,7 +37,8 @@ class _SettingsPageState extends State<SettingsPage> {
   static const String _socketAuthTokenKey = 'socket_auth_token';
   static const String _devServerAuthEnabledKey = 'dev_server_auth_enabled';
   static const String _devServerApiKeyKey = 'dev_server_api_key';
-  bool _isLoading = false;
+  Timer? _serverDebounceTimer;
+  Timer? _authDebounceTimer;
   late bool _isCompanionModeEnabled;
   late AppLanguage _selectedLanguage;
   bool _socketAuthEnabled = false;
@@ -49,14 +52,29 @@ class _SettingsPageState extends State<SettingsPage> {
     _serverIpController = TextEditingController();
     _socketAuthTokenController = TextEditingController();
     _devServerApiKeyController = TextEditingController();
-    _loadServerAddress();
-    _loadAuthSettings();
     _isCompanionModeEnabled = widget.isCompanionModeEnabled;
     _selectedLanguage = widget.languageController.language;
+
+    // Load saved values first, then attach listeners to avoid
+    // triggering auto-save during initial load.
+    _initSettings();
+  }
+
+  Future<void> _initSettings() async {
+    await Future.wait([_loadServerAddress(), _loadAuthSettings()]);
+    if (!mounted) return;
+    _serverIpController.addListener(_onServerAddressChanged);
+    _socketAuthTokenController.addListener(_onAuthSettingChanged);
+    _devServerApiKeyController.addListener(_onAuthSettingChanged);
   }
 
   @override
   void dispose() {
+    _serverDebounceTimer?.cancel();
+    _authDebounceTimer?.cancel();
+    _serverIpController.removeListener(_onServerAddressChanged);
+    _socketAuthTokenController.removeListener(_onAuthSettingChanged);
+    _devServerApiKeyController.removeListener(_onAuthSettingChanged);
     _serverIpController.dispose();
     _socketAuthTokenController.dispose();
     _devServerApiKeyController.dispose();
@@ -103,7 +121,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _saveAuthSettings() async {
-    final strings = AppStringsScope.of(context);
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setBool(_socketAuthEnabledKey, _socketAuthEnabled);
@@ -127,26 +144,12 @@ class _SettingsPageState extends State<SettingsPage> {
     } on PlatformException catch (e) {
       debugPrint('Error pushing auth settings to native: ${e.message}');
     }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(strings.authSettingsSaved),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
   }
 
-  // --- MODIFIED METHOD ---
-  // This method is updated to fix the loading state and remove SnackBars.
   Future<void> _saveServerAddress() async {
-    final strings = AppStringsScope.of(context);
     if (!(_formKey.currentState?.validate() ?? false)) {
       return; // Exit if form is not valid
     }
-
-    setState(() => _isLoading = true);
 
     final ipAddress = _serverIpController.text.trim();
 
@@ -157,23 +160,23 @@ class _SettingsPageState extends State<SettingsPage> {
       await platform.invokeMethod('sendServerAddress', {
         'serverAddress': ipAddress,
       });
-
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(strings.serverAddressSaved(ipAddress)),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
     } on PlatformException catch (e) {
       debugPrint("Error saving server address: ${e.message}");
-
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
+  }
+
+  void _onServerAddressChanged() {
+    _serverDebounceTimer?.cancel();
+    _serverDebounceTimer = Timer(const Duration(milliseconds: 800), () {
+      _saveServerAddress();
+    });
+  }
+
+  void _onAuthSettingChanged() {
+    _authDebounceTimer?.cancel();
+    _authDebounceTimer = Timer(const Duration(milliseconds: 800), () {
+      _saveAuthSettings();
+    });
   }
 
   @override
@@ -215,7 +218,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               value: _isCompanionModeEnabled,
-              onChanged: _isLoading ? null : _toggleCompanionMode,
+              onChanged: _toggleCompanionMode,
             ),
             const SizedBox(height: 24),
             Text(
@@ -244,12 +247,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
               selected: {_selectedLanguage},
-              onSelectionChanged:
-                  _isLoading
-                      ? null
-                      : (selection) {
-                        _changeLanguage(selection.first);
-                      },
+              onSelectionChanged: (selection) {
+                _changeLanguage(selection.first);
+              },
             ),
             const SizedBox(height: 24),
             Text(
@@ -268,7 +268,6 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 24),
             TextFormField(
               controller: _serverIpController,
-              enabled: !_isLoading,
               decoration: InputDecoration(
                 labelText: strings.serverIpLabel,
                 hintText: strings.serverIpHint,
@@ -295,32 +294,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 }
                 return null;
               },
-            ),
-            const SizedBox(height: 32),
-            FilledButton.icon(
-              onPressed: _isLoading ? null : _saveServerAddress,
-              icon:
-                  _isLoading
-                      ? Container(
-                        width: 20,
-                        height: 20,
-                        padding: const EdgeInsets.all(2.0),
-                        child: const CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 3,
-                        ),
-                      )
-                      : const Icon(Icons.save_rounded),
-              label: Text(
-                _isLoading ? strings.savingButton : strings.saveButton,
-              ),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
             ),
             const SizedBox(height: 32),
             Divider(color: Colors.grey.withOpacity(0.3)),
@@ -358,15 +331,14 @@ class _SettingsPageState extends State<SettingsPage> {
               contentPadding: EdgeInsets.zero,
               title: Text(strings.socketAuthTitle),
               value: _socketAuthEnabled,
-              onChanged:
-                  _isLoading
-                      ? null
-                      : (val) => setState(() => _socketAuthEnabled = val),
+              onChanged: (val) {
+                setState(() => _socketAuthEnabled = val);
+                _saveAuthSettings();
+              },
             ),
             if (_socketAuthEnabled)
               TextFormField(
                 controller: _socketAuthTokenController,
-                enabled: !_isLoading,
                 obscureText: _obscureSocketToken,
                 decoration: InputDecoration(
                   labelText: strings.socketAuthTokenLabel,
@@ -414,15 +386,14 @@ class _SettingsPageState extends State<SettingsPage> {
               contentPadding: EdgeInsets.zero,
               title: Text(strings.devServerAuthTitle),
               value: _devServerAuthEnabled,
-              onChanged:
-                  _isLoading
-                      ? null
-                      : (val) => setState(() => _devServerAuthEnabled = val),
+              onChanged: (val) {
+                setState(() => _devServerAuthEnabled = val);
+                _saveAuthSettings();
+              },
             ),
             if (_devServerAuthEnabled)
               TextFormField(
                 controller: _devServerApiKeyController,
-                enabled: !_isLoading,
                 obscureText: _obscureDevServerKey,
                 decoration: InputDecoration(
                   labelText: strings.devServerApiKeyLabel,
@@ -452,18 +423,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
             const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: _isLoading ? null : _saveAuthSettings,
-              icon: const Icon(Icons.shield_rounded),
-              label: Text(strings.saveButton),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
           ],
         ),
       ),
