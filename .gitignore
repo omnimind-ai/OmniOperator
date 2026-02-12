@@ -22,3 +22,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+/misc/
+/out/
