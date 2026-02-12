@@ -63,6 +63,12 @@ class OmniDevServer(
     private var lastScreenshotTimestamp: Long = 0L
     private var lastXmlTimestamp: Long = 0L
 
+    // Optional API Key for authenticating incoming requests.
+    // When set, every request must include a matching
+    // "Authorization: Bearer <apiKey>" header.
+    // Unauthenticated public endpoints (/health) are excluded.
+    var apiKey: String? = null
+
     @CommandInfo(
         "captureScreenshotImage",
         "Capture a screenshot as base64 encoded JPEG.",
@@ -454,6 +460,22 @@ class OmniDevServer(
 
     override fun serve(session: IHTTPSession): Response =
         runBlocking {
+            // --- Authentication middleware ---
+            // If an API key is configured, require a matching
+            // "Authorization: Bearer <key>" header on every request
+            // except /health (kept public for uptime checks).
+            val key = apiKey
+            if (!key.isNullOrBlank() && session.uri != "/health") {
+                val authHeader = session.headers["authorization"]
+                if (authHeader == null || authHeader != "Bearer $key") {
+                    return@runBlocking newFixedLengthResponse(
+                        Response.Status.UNAUTHORIZED,
+                        "application/json",
+                        """{"success":false,"message":"Unauthorized"}""",
+                    )
+                }
+            }
+
             return@runBlocking when (session.uri) {
                 "/" -> handleRootRequest()
                 "/commands" -> handleCommandsRequest()

@@ -16,6 +16,10 @@ object DevServerManager {
     var serverAddress: String? = null
         private set
 
+    // Optional API key for DevServer authentication.
+    // Set before calling startServer to enable.
+    var apiKey: String? = null
+
     val isRunning: Boolean
         get() = omniDevServer?.isAlive == true
 
@@ -30,7 +34,11 @@ object DevServerManager {
             val port = BASE_SERVER_PORT + attempt
             try {
                 // 1. Start the HTTP Server
-                omniDevServer = OmniDevServer(port).apply { start() }
+                omniDevServer =
+                    OmniDevServer(port).apply {
+                        apiKey = this@DevServerManager.apiKey
+                        start()
+                    }
 
                 // 2. Get the IP address
                 val ipAddress = getLocalIpAddress()

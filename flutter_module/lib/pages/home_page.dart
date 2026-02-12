@@ -308,6 +308,29 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         }
       }
     }
+
+    // Restore persisted auth settings and push them to native.
+    // This ensures auth config survives app restarts without
+    // requiring the user to open the settings page first.
+    await _restoreAuthSettings(prefs);
+  }
+
+  Future<void> _restoreAuthSettings(SharedPreferences prefs) async {
+    final socketEnabled = prefs.getBool('socket_auth_enabled') ?? false;
+    final socketToken = prefs.getString('socket_auth_token') ?? '';
+    final devServerEnabled = prefs.getBool('dev_server_auth_enabled') ?? false;
+    final devServerKey = prefs.getString('dev_server_api_key') ?? '';
+
+    try {
+      await platform.invokeMethod('setSocketAuthToken', {
+        'token': socketEnabled ? socketToken : '',
+      });
+      await platform.invokeMethod('setDevServerApiKey', {
+        'apiKey': devServerEnabled ? devServerKey : '',
+      });
+    } on PlatformException catch (e) {
+      debugPrint('Error restoring auth settings: ${e.message}');
+    }
   }
 
   Future<void> _showInitialSetupDialog() async {
