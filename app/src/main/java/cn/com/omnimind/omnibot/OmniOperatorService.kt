@@ -98,8 +98,6 @@ class OmniOperatorService : AccessibilityService() {
         }
     }
 
-    // --- Refactored Service Methods ---
-
     private suspend fun captureScreenshotImage(): CaptureScreenshotImageResult =
         executeOperation("Capture Screenshot Image") {
             withTimeout(1000) { screenshotController.captureScreenshotImage() }
@@ -115,10 +113,6 @@ class OmniOperatorService : AccessibilityService() {
         executeOperation("Get Package Name and Activity Name") {
             val packageName = screenshotController.getCurrentPackageName()
             val activityName = screenshotController.getCurrentActivityName()
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_metadata_got),
-//                getString(R.string.omni_content_metadata_got_success,packageName,activityName)
-//            )
             GetMetadataData(
                 packageName = packageName,
                 activityName = activityName
@@ -169,10 +163,6 @@ class OmniOperatorService : AccessibilityService() {
             val node = screenshotController.getNodeMap()?.get(nodeId) ?: throw IllegalArgumentException("Node with ID '$nodeId' not found.")
             overlayController.showClickIndicator(node.bounds.centerX().toFloat(), node.bounds.centerY().toFloat())
             actionController.clickNode(node.info)
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_node_clicked),
-//                getString(R.string.omni_content_node_clicked_success, nodeId)
-//            )
         }
 
     private suspend fun longClickNode(nodeId: String): LongClickNodeResult =
@@ -180,10 +170,6 @@ class OmniOperatorService : AccessibilityService() {
             val node = screenshotController.getNodeMap()?.get(nodeId) ?: throw IllegalArgumentException("Node with ID '$nodeId' not found.")
             overlayController.showClickIndicator(node.bounds.centerX().toFloat(), node.bounds.centerY().toFloat())
             actionController.longClickNode(node.info)
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_node_long_clicked),
-//                getString(R.string.omni_content_node_long_clicked_success, nodeId)
-//            )
         }
 
     private suspend fun scrollNode(nodeId: String, direction: String): ScrollNodeResult =
@@ -195,20 +181,12 @@ class OmniOperatorService : AccessibilityService() {
                 else -> throw IllegalArgumentException("Invalid direction: $direction. Use 'forward' or 'backward'.")
             }
             actionController.scrollNode(node, scrollDirection)
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_node_scrolled),
-//                getString(R.string.omni_content_node_scrolled_success, nodeId, direction)
-//            )
         }
 
     private suspend fun inputText(nodeId: String, text: String): InputTextResult =
         executeOperation("Input Text in Node '$nodeId'") {
             val node = screenshotController.getNodeMap()?.get(nodeId)?.info ?: throw IllegalArgumentException("Node with ID '$nodeId' not found.")
             actionController.inputText(node, text)
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_text_input),
-//                getString(R.string.omni_content_text_input_success, nodeId)
-//            )
         }
 
     private suspend fun inputTextToFocusedNode(text: String): InputTextToFocusedNodeResult =
@@ -216,19 +194,11 @@ class OmniOperatorService : AccessibilityService() {
             val focusedNode = screenshotController.getNodeMap()?.values?.firstOrNull { it.info.isFocused }?.info
                 ?: throw IllegalStateException("No focused node found on the screen.")
             actionController.inputText(focusedNode, text)
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_text_input),
-//                getString(R.string.omni_content_text_input_focused_success)
-//            )
         }
 
     private suspend fun copyToClipboard(text: String): CopyToClipboardResult =
         executeOperation("Copy Text to Clipboard") {
             actionController.copyToClipboard(this, text)
-//            overlayController.showDynamicIslandMessage(
-//                "Text Set",
-//                "Set text to clipboard"
-//            )
         }
 
     private suspend fun injectTextByIME(text: String): InjectTextByIMEResult =
@@ -242,31 +212,18 @@ class OmniOperatorService : AccessibilityService() {
             } else {
                 actionController.injectTextByIME(text)
             }
-//            overlayController.showDynamicIslandMessage(
-//                "Text Input",
-//                "Input text by Omni IME"
-//            )
         }
-
 
     private suspend fun clickCoordinate(x: Float, y: Float): ClickCoordinateResult =
         executeOperation("Click Coordinate ($x, $y)") {
             overlayController.showClickIndicator(x, y)
             withTimeout(1000) { actionController.clickCoordinate(x, y).await() }
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_coord_clicked),
-//                getString(R.string.omni_content_coord_clicked_success, x.toString(), y.toString())
-//            )
         }
 
     private suspend fun longClickCoordinate(x: Float, y: Float): LongClickCoordinateResult =
         executeOperation("Long Click Coordinate ($x, $y)") {
             overlayController.showClickIndicator(x, y)
             withTimeout(2000) { actionController.longClickCoordinate(x, y).await() }
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_coord_long_clicked),
-//                getString(R.string.omni_content_coord_long_clicked_success, x.toString(), y.toString())
-//            )
         }
 
     private suspend fun scrollCoordinate(x: Float, y: Float, direction: String, distance: Float): ScrollCoordinateResult =
@@ -280,37 +237,21 @@ class OmniOperatorService : AccessibilityService() {
             }
             overlayController.showScrollIndicator(x, y, scrollDirection, distance)
             withTimeout(1000) { actionController.scrollCoordinate(x, y, scrollDirection, distance).await() }
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_coord_scrolled),
-//                getString(R.string.omni_content_coord_scrolled_success, x.toString(), y.toString(), direction)
-//            )
         }
 
     private suspend fun goHome(): GoHomeResult =
         executeOperation("Go Home") {
             actionController.goHome()
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_home_action),
-//                getString(R.string.omni_content_home_action_success)
-//            )
         }
 
     private suspend fun goBack(): GoBackResult =
         executeOperation("Go Back") {
             actionController.goBack()
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_back_action),
-//                getString(R.string.omni_content_back_action_success)
-//            )
         }
 
     private suspend fun launchApplication(packageName: String): LaunchApplicationResult =
         executeOperation("Launch Application '$packageName'") {
             actionController.launchApplication(packageName)
-//            overlayController.showDynamicIslandMessage(
-//                getString(R.string.omni_title_app_launched),
-//                getString(R.string.omni_content_app_launched_success, packageName)
-//            )
         }
 
     private suspend fun listInstalledApplications(): ListInstalledApplicationsResult =
