@@ -25,11 +25,19 @@ class OmniOperatorService : AccessibilityService() {
         private const val SERVICE_NOT_RUNNING = "Accessibility service is not running."
         private var instance: OmniOperatorService? = null
 
+        private fun requireInstance(): OmniOperatorService =
+            instance ?: throw IllegalStateException(
+                "OmniOperatorService is not running. Please enable accessibility service."
+            )
+
         private suspend fun <T> requireService(
             block: suspend OmniOperatorService.() -> BaseOperatorResult<T>,
         ): BaseOperatorResult<T> {
-            val service = instance
-                ?: return BaseOperatorResult(success = false, message = SERVICE_NOT_RUNNING)
+            val service = try {
+                requireInstance()
+            } catch (_: IllegalStateException) {
+                return BaseOperatorResult(success = false, message = SERVICE_NOT_RUNNING)
+            }
             return service.block()
         }
 
