@@ -104,6 +104,10 @@ class AppStrings {
       _isZh ? 'JPEG 质量：$value' : 'JPEG quality: $value';
   String get screenshotQualityInputLabel =>
       _isZh ? '质量数值 (1-100)' : 'Quality value (1-100)';
+  String get screenshotQualityTooLowWarning =>
+      _isZh
+          ? '！截图质量过低，可能导致识别错误、点击偏差或任务执行不稳定。'
+          : '! Screenshot quality is too low and may cause recognition errors, inaccurate taps, or unstable task execution.';
 
   String get tryHint =>
       _isZh ? '试试：“设置明天8点的闹钟”' : 'Try: "Set an alarm for 8am tomorrow"';
