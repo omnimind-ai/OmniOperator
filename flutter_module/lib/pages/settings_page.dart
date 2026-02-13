@@ -454,11 +454,24 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 16),
             // Socket.IO Auth
-            Text(
-              strings.socketAuthTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    strings.socketAuthTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Switch(
+                  value: _socketAuthEnabled,
+                  onChanged: (val) {
+                    setState(() => _socketAuthEnabled = val);
+                    _saveAuthSettings();
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(
@@ -466,15 +479,6 @@ class _SettingsPageState extends State<SettingsPage> {
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(strings.socketAuthTitle),
-              value: _socketAuthEnabled,
-              onChanged: (val) {
-                setState(() => _socketAuthEnabled = val);
-                _saveAuthSettings();
-              },
             ),
             if (_socketAuthEnabled)
               TextFormField(
@@ -509,11 +513,24 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             const SizedBox(height: 24),
             // DevServer Auth
-            Text(
-              strings.devServerAuthTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    strings.devServerAuthTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Switch(
+                  value: _devServerAuthEnabled,
+                  onChanged: (val) {
+                    setState(() => _devServerAuthEnabled = val);
+                    _saveAuthSettings();
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(
@@ -521,15 +538,6 @@ class _SettingsPageState extends State<SettingsPage> {
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(strings.devServerAuthTitle),
-              value: _devServerAuthEnabled,
-              onChanged: (val) {
-                setState(() => _devServerAuthEnabled = val);
-                _saveAuthSettings();
-              },
             ),
             if (_devServerAuthEnabled)
               TextFormField(
