@@ -334,10 +334,20 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
     final screenshotQuality =
         (prefs.getInt('screenshot_jpeg_quality') ?? 50).clamp(1, 100) as int;
+    final screenshotResizeEnabled =
+        prefs.getBool('screenshot_resize_enabled') ?? false;
+    final screenshotScalePercent =
+        (prefs.getInt('screenshot_scale_percent') ?? 100).clamp(1, 100) as int;
     try {
-      await platform.invokeMethod('setScreenshotQuality', {
-        'quality': screenshotQuality,
-      });
+      await Future.wait([
+        platform.invokeMethod('setScreenshotQuality', {
+          'quality': screenshotQuality,
+        }),
+        platform.invokeMethod('setScreenshotResize', {
+          'enabled': screenshotResizeEnabled,
+          'scalePercent': screenshotScalePercent,
+        }),
+      ]);
     } on PlatformException catch (e) {
       debugPrint('Error restoring screenshot quality: ${e.message}');
     }

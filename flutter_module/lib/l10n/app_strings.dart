@@ -108,6 +108,20 @@ class AppStrings {
       _isZh
           ? '！截图质量过低，可能导致识别错误、点击偏差或任务执行不稳定。'
           : '! Screenshot quality is too low and may cause recognition errors, inaccurate taps, or unstable task execution.';
+  String get screenshotResizeTitle =>
+      _isZh ? '截图缩放（按比例）' : 'Screenshot Resize (Scale)';
+  String get screenshotResizeSubtitle =>
+      _isZh
+          ? '可选。默认关闭；开启后按比例缩放截图尺寸。'
+          : 'Optional. Disabled by default; when enabled, screenshots are resized proportionally.';
+  String screenshotResizeValue(int value) =>
+      _isZh ? '缩放比例：$value%' : 'Scale: $value%';
+  String get screenshotResizeInputLabel =>
+      _isZh ? '缩放比例 (1-100)' : 'Scale value (1-100)';
+  String get screenshotResizeTooLowWarning =>
+      _isZh
+          ? '！截图缩放比例过低，可能导致识别错误、点击偏差或任务执行不稳定。'
+          : '! Screenshot scale is too low and may cause recognition errors, inaccurate taps, or unstable task execution.';
 
   String get tryHint =>
       _isZh ? '试试：“设置明天8点的闹钟”' : 'Try: "Set an alarm for 8am tomorrow"';
