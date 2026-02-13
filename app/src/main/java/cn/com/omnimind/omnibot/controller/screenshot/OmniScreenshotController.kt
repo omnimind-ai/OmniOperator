@@ -259,15 +259,48 @@ object XmlTreeUtils {
 object ImageUtils {
     @Volatile
     private var jpegQuality: Int = 50
+    @Volatile
+    private var resizeEnabled: Boolean = false
+    @Volatile
+    private var scalePercent: Int = 100
 
     fun setJpegQuality(quality: Int) {
         jpegQuality = quality.coerceIn(1, 100)
     }
 
+    fun setResizeConfig(
+        enabled: Boolean,
+        scalePercent: Int,
+    ) {
+        resizeEnabled = enabled
+        this.scalePercent = scalePercent.coerceIn(1, 100)
+    }
+
     fun bitmapToJpegBase64(bitmap: Bitmap): String {
+        val scaledBitmap = maybeScaleBitmap(bitmap)
         val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, jpegQuality, byteArrayOutputStream)
+        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, jpegQuality, byteArrayOutputStream)
+        if (scaledBitmap !== bitmap) {
+            scaledBitmap.recycle()
+        }
         val byteArray = byteArrayOutputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
+    }
+
+    private fun maybeScaleBitmap(bitmap: Bitmap): Bitmap {
+        if (!resizeEnabled) return bitmap
+        val normalizedScalePercent = scalePercent.coerceIn(1, 100)
+        if (normalizedScalePercent >= 100) return bitmap
+
+        val targetWidth = (bitmap.width * normalizedScalePercent / 100f).toInt().coerceAtLeast(1)
+        val targetHeight = (bitmap.height * normalizedScalePercent / 100f).toInt().coerceAtLeast(1)
+        if (targetWidth == bitmap.width && targetHeight == bitmap.height) {
+            return bitmap
+        }
+        return try {
+            Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+        } catch (_: Exception) {
+            bitmap
+        }
     }
 }

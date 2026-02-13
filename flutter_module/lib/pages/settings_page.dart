@@ -32,6 +32,7 @@ class _SettingsPageState extends State<SettingsPage> {
   late final TextEditingController _socketAuthTokenController;
   late final TextEditingController _devServerApiKeyController;
   late final TextEditingController _screenshotQualityController;
+  late final TextEditingController _screenshotScaleController;
   // Use a consistent key across the app.
   static const String _serverIpKey = 'server_ip_address';
   static const String _socketAuthEnabledKey = 'socket_auth_enabled';
@@ -39,7 +40,10 @@ class _SettingsPageState extends State<SettingsPage> {
   static const String _devServerAuthEnabledKey = 'dev_server_auth_enabled';
   static const String _devServerApiKeyKey = 'dev_server_api_key';
   static const String _screenshotQualityKey = 'screenshot_jpeg_quality';
+  static const String _screenshotResizeEnabledKey = 'screenshot_resize_enabled';
+  static const String _screenshotScalePercentKey = 'screenshot_scale_percent';
   static const int _defaultScreenshotQuality = 50;
+  static const int _defaultScreenshotScalePercent = 100;
   Timer? _serverDebounceTimer;
   Timer? _authDebounceTimer;
   Timer? _advancedDebounceTimer;
@@ -50,6 +54,8 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _obscureSocketToken = true;
   bool _obscureDevServerKey = true;
   int _screenshotQuality = _defaultScreenshotQuality;
+  bool _screenshotResizeEnabled = false;
+  int _screenshotScalePercent = _defaultScreenshotScalePercent;
 
   @override
   void initState() {
@@ -59,6 +65,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _devServerApiKeyController = TextEditingController();
     _screenshotQualityController = TextEditingController(
       text: _defaultScreenshotQuality.toString(),
+    );
+    _screenshotScaleController = TextEditingController(
+      text: _defaultScreenshotScalePercent.toString(),
     );
     _isCompanionModeEnabled = widget.isCompanionModeEnabled;
     _selectedLanguage = widget.languageController.language;
@@ -92,6 +101,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _socketAuthTokenController.dispose();
     _devServerApiKeyController.dispose();
     _screenshotQualityController.dispose();
+    _screenshotScaleController.dispose();
     super.dispose();
   }
 
@@ -164,21 +174,44 @@ class _SettingsPageState extends State<SettingsPage> {
     final prefs = await SharedPreferences.getInstance();
     final screenshotQuality =
         prefs.getInt(_screenshotQualityKey) ?? _defaultScreenshotQuality;
-    final normalized = screenshotQuality.clamp(1, 100) as int;
+    final screenshotScalePercent =
+        prefs.getInt(_screenshotScalePercentKey) ??
+        _defaultScreenshotScalePercent;
+    final resizeEnabled = prefs.getBool(_screenshotResizeEnabledKey) ?? false;
+    final normalizedQuality = screenshotQuality.clamp(1, 100) as int;
+    final normalizedScale = screenshotScalePercent.clamp(1, 100) as int;
     if (mounted) {
       setState(() {
-        _screenshotQuality = normalized;
+        _screenshotQuality = normalizedQuality;
+        _screenshotResizeEnabled = resizeEnabled;
+        _screenshotScalePercent = normalizedScale;
       });
     }
-    _screenshotQualityController.text = normalized.toString();
-    await _pushScreenshotQualityToNative(normalized);
+    _screenshotQualityController.text = normalizedQuality.toString();
+    _screenshotScaleController.text = normalizedScale.toString();
+    await Future.wait([
+      _pushScreenshotQualityToNative(normalizedQuality),
+      _pushScreenshotResizeToNative(
+        enabled: resizeEnabled,
+        scalePercent: normalizedScale,
+      ),
+    ]);
   }
 
   Future<void> _saveAdvancedSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    final normalized = _screenshotQuality.clamp(1, 100) as int;
-    await prefs.setInt(_screenshotQualityKey, normalized);
-    await _pushScreenshotQualityToNative(normalized);
+    final normalizedQuality = _screenshotQuality.clamp(1, 100) as int;
+    final normalizedScale = _screenshotScalePercent.clamp(1, 100) as int;
+    await prefs.setInt(_screenshotQualityKey, normalizedQuality);
+    await prefs.setBool(_screenshotResizeEnabledKey, _screenshotResizeEnabled);
+    await prefs.setInt(_screenshotScalePercentKey, normalizedScale);
+    await Future.wait([
+      _pushScreenshotQualityToNative(normalizedQuality),
+      _pushScreenshotResizeToNative(
+        enabled: _screenshotResizeEnabled,
+        scalePercent: normalizedScale,
+      ),
+    ]);
   }
 
   Future<void> _pushScreenshotQualityToNative(int quality) async {
@@ -188,6 +221,20 @@ class _SettingsPageState extends State<SettingsPage> {
       });
     } on PlatformException catch (e) {
       debugPrint('Error pushing screenshot quality to native: ${e.message}');
+    }
+  }
+
+  Future<void> _pushScreenshotResizeToNative({
+    required bool enabled,
+    required int scalePercent,
+  }) async {
+    try {
+      await platform.invokeMethod('setScreenshotResize', {
+        'enabled': enabled,
+        'scalePercent': scalePercent.clamp(1, 100),
+      });
+    } on PlatformException catch (e) {
+      debugPrint('Error pushing screenshot resize to native: ${e.message}');
     }
   }
 
@@ -245,6 +292,30 @@ class _SettingsPageState extends State<SettingsPage> {
       _screenshotQuality = normalized;
     });
     _screenshotQualityController.text = normalized.toString();
+    _saveAdvancedSettings();
+  }
+
+  void _onScreenshotScaleChanged(double value) {
+    final normalized = value.round().clamp(1, 100) as int;
+    setState(() {
+      _screenshotScalePercent = normalized;
+    });
+    if (_screenshotScaleController.text != normalized.toString()) {
+      _screenshotScaleController.text = normalized.toString();
+    }
+    _advancedDebounceTimer?.cancel();
+    _advancedDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _saveAdvancedSettings();
+    });
+  }
+
+  void _onScreenshotScaleTextSubmitted(String value) {
+    final parsed = int.tryParse(value.trim());
+    final normalized = (parsed ?? _screenshotScalePercent).clamp(1, 100) as int;
+    setState(() {
+      _screenshotScalePercent = normalized;
+    });
+    _screenshotScaleController.text = normalized.toString();
     _saveAdvancedSettings();
   }
 
@@ -595,6 +666,113 @@ class _SettingsPageState extends State<SettingsPage> {
                 FocusScope.of(context).unfocus();
               },
             ),
+            const SizedBox(height: 24),
+            Text(
+              strings.screenshotResizeTitle,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              strings.screenshotResizeSubtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(strings.screenshotResizeTitle),
+              value: _screenshotResizeEnabled,
+              onChanged: (enabled) {
+                setState(() {
+                  _screenshotResizeEnabled = enabled;
+                });
+                _saveAdvancedSettings();
+              },
+            ),
+            if (_screenshotResizeEnabled) ...[
+              Text(
+                strings.screenshotResizeValue(_screenshotScalePercent),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+              if (_screenshotScalePercent < 30) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      size: 18,
+                      color: theme.colorScheme.error,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        strings.screenshotResizeTooLowWarning,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              Slider(
+                min: 1,
+                max: 100,
+                divisions: 99,
+                value: _screenshotScalePercent.toDouble(),
+                label: _screenshotScalePercent.toString(),
+                onChanged: _onScreenshotScaleChanged,
+              ),
+              TextFormField(
+                controller: _screenshotScaleController,
+                decoration: InputDecoration(
+                  labelText: strings.screenshotResizeInputLabel,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide(color: theme.primaryColor),
+                  ),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: false,
+                  signed: false,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(3),
+                ],
+                onChanged: (value) {
+                  final parsed = int.tryParse(value);
+                  if (parsed == null) return;
+                  final normalized = parsed.clamp(1, 100) as int;
+                  if (normalized == _screenshotScalePercent) return;
+                  setState(() {
+                    _screenshotScalePercent = normalized;
+                  });
+                  _advancedDebounceTimer?.cancel();
+                  _advancedDebounceTimer = Timer(
+                    const Duration(milliseconds: 300),
+                    () {
+                      _saveAdvancedSettings();
+                    },
+                  );
+                },
+                onFieldSubmitted: _onScreenshotScaleTextSubmitted,
+                onEditingComplete: () {
+                  _onScreenshotScaleTextSubmitted(
+                    _screenshotScaleController.text,
+                  );
+                  FocusScope.of(context).unfocus();
+                },
+              ),
+            ],
             const SizedBox(height: 24),
           ],
         ),

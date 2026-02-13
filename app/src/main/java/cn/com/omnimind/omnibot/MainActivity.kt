@@ -141,6 +141,16 @@ class MainActivity : FlutterActivity() {
                     OmniLog.v(TAG, "Screenshot JPEG quality updated to ${quality.coerceIn(1, 100)}")
                     result.success(null)
                 }
+                "setScreenshotResize" -> {
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    val scalePercent = call.argument<Int>("scalePercent") ?: 100
+                    ImageUtils.setResizeConfig(enabled = enabled, scalePercent = scalePercent)
+                    OmniLog.v(
+                        TAG,
+                        "Screenshot resize config updated: enabled=$enabled, scale=${scalePercent.coerceIn(1, 100)}%",
+                    )
+                    result.success(null)
+                }
                 else -> {
                     result.notImplemented()
                 }
