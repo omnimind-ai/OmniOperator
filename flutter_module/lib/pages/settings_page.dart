@@ -565,214 +565,219 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 32),
             Divider(color: Colors.grey.withOpacity(0.3)),
             const SizedBox(height: 16),
-            Text(
-              strings.advancedSectionTitle,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w500,
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              initiallyExpanded: false,
+              title: Text(
+                strings.advancedSectionTitle,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              strings.advancedSectionSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              subtitle: Text(
+                strings.advancedSectionSubtitle,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              strings.screenshotQualityTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              strings.screenshotQualityValue(_screenshotQuality),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-            if (_screenshotQuality < 30) ...[
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    size: 18,
-                    color: theme.colorScheme.error,
+              children: [
+                const SizedBox(height: 8),
+                Text(
+                  strings.screenshotQualityTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      strings.screenshotQualityTooLowWarning,
-                      style: theme.textTheme.bodySmall?.copyWith(
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  strings.screenshotQualityValue(_screenshotQuality),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
+                if (_screenshotQuality < 30) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        size: 18,
                         color: theme.colorScheme.error,
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            Slider(
-              min: 1,
-              max: 100,
-              divisions: 99,
-              value: _screenshotQuality.toDouble(),
-              label: _screenshotQuality.toString(),
-              onChanged: _onScreenshotQualityChanged,
-            ),
-            TextFormField(
-              controller: _screenshotQualityController,
-              decoration: InputDecoration(
-                labelText: strings.screenshotQualityInputLabel,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: BorderSide(color: theme.primaryColor),
-                ),
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: false,
-                signed: false,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(3),
-              ],
-              onChanged: (value) {
-                final parsed = int.tryParse(value);
-                if (parsed == null) return;
-                final normalized = parsed.clamp(1, 100) as int;
-                if (normalized == _screenshotQuality) return;
-                setState(() {
-                  _screenshotQuality = normalized;
-                });
-                _advancedDebounceTimer?.cancel();
-                _advancedDebounceTimer = Timer(
-                  const Duration(milliseconds: 300),
-                  () {
-                    _saveAdvancedSettings();
-                  },
-                );
-              },
-              onFieldSubmitted: _onScreenshotQualityTextSubmitted,
-              onEditingComplete: () {
-                _onScreenshotQualityTextSubmitted(
-                  _screenshotQualityController.text,
-                );
-                FocusScope.of(context).unfocus();
-              },
-            ),
-            const SizedBox(height: 24),
-            Text(
-              strings.screenshotResizeTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              strings.screenshotResizeSubtitle,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(strings.screenshotResizeTitle),
-              value: _screenshotResizeEnabled,
-              onChanged: (enabled) {
-                setState(() {
-                  _screenshotResizeEnabled = enabled;
-                });
-                _saveAdvancedSettings();
-              },
-            ),
-            if (_screenshotResizeEnabled) ...[
-              Text(
-                strings.screenshotResizeValue(_screenshotScalePercent),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
-                ),
-              ),
-              if (_screenshotScalePercent < 30) ...[
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      size: 18,
-                      color: theme.colorScheme.error,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        strings.screenshotResizeTooLowWarning,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.error,
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          strings.screenshotQualityTooLowWarning,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                          ),
                         ),
                       ),
+                    ],
+                  ),
+                ],
+                Slider(
+                  min: 1,
+                  max: 100,
+                  divisions: 99,
+                  value: _screenshotQuality.toDouble(),
+                  label: _screenshotQuality.toString(),
+                  onChanged: _onScreenshotQualityChanged,
+                ),
+                TextFormField(
+                  controller: _screenshotQualityController,
+                  decoration: InputDecoration(
+                    labelText: strings.screenshotQualityInputLabel,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: BorderSide(color: theme.primaryColor),
+                    ),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: false,
+                    signed: false,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(3),
+                  ],
+                  onChanged: (value) {
+                    final parsed = int.tryParse(value);
+                    if (parsed == null) return;
+                    final normalized = parsed.clamp(1, 100) as int;
+                    if (normalized == _screenshotQuality) return;
+                    setState(() {
+                      _screenshotQuality = normalized;
+                    });
+                    _advancedDebounceTimer?.cancel();
+                    _advancedDebounceTimer = Timer(
+                      const Duration(milliseconds: 300),
+                      () {
+                        _saveAdvancedSettings();
+                      },
+                    );
+                  },
+                  onFieldSubmitted: _onScreenshotQualityTextSubmitted,
+                  onEditingComplete: () {
+                    _onScreenshotQualityTextSubmitted(
+                      _screenshotQualityController.text,
+                    );
+                    FocusScope.of(context).unfocus();
+                  },
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  strings.screenshotResizeTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  strings.screenshotResizeSubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(strings.screenshotResizeTitle),
+                  value: _screenshotResizeEnabled,
+                  onChanged: (enabled) {
+                    setState(() {
+                      _screenshotResizeEnabled = enabled;
+                    });
+                    _saveAdvancedSettings();
+                  },
+                ),
+                if (_screenshotResizeEnabled) ...[
+                  Text(
+                    strings.screenshotResizeValue(_screenshotScalePercent),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                  if (_screenshotScalePercent < 30) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 18,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            strings.screenshotResizeTooLowWarning,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
-              Slider(
-                min: 1,
-                max: 100,
-                divisions: 99,
-                value: _screenshotScalePercent.toDouble(),
-                label: _screenshotScalePercent.toString(),
-                onChanged: _onScreenshotScaleChanged,
-              ),
-              TextFormField(
-                controller: _screenshotScaleController,
-                decoration: InputDecoration(
-                  labelText: strings.screenshotResizeInputLabel,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
+                  Slider(
+                    min: 1,
+                    max: 100,
+                    divisions: 99,
+                    value: _screenshotScalePercent.toDouble(),
+                    label: _screenshotScalePercent.toString(),
+                    onChanged: _onScreenshotScaleChanged,
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(color: theme.primaryColor),
-                  ),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: false,
-                  signed: false,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(3),
-                ],
-                onChanged: (value) {
-                  final parsed = int.tryParse(value);
-                  if (parsed == null) return;
-                  final normalized = parsed.clamp(1, 100) as int;
-                  if (normalized == _screenshotScalePercent) return;
-                  setState(() {
-                    _screenshotScalePercent = normalized;
-                  });
-                  _advancedDebounceTimer?.cancel();
-                  _advancedDebounceTimer = Timer(
-                    const Duration(milliseconds: 300),
-                    () {
-                      _saveAdvancedSettings();
+                  TextFormField(
+                    controller: _screenshotScaleController,
+                    decoration: InputDecoration(
+                      labelText: strings.screenshotResizeInputLabel,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                        borderSide: BorderSide(color: theme.primaryColor),
+                      ),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: false,
+                      signed: false,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(3),
+                    ],
+                    onChanged: (value) {
+                      final parsed = int.tryParse(value);
+                      if (parsed == null) return;
+                      final normalized = parsed.clamp(1, 100) as int;
+                      if (normalized == _screenshotScalePercent) return;
+                      setState(() {
+                        _screenshotScalePercent = normalized;
+                      });
+                      _advancedDebounceTimer?.cancel();
+                      _advancedDebounceTimer = Timer(
+                        const Duration(milliseconds: 300),
+                        () {
+                          _saveAdvancedSettings();
+                        },
+                      );
                     },
-                  );
-                },
-                onFieldSubmitted: _onScreenshotScaleTextSubmitted,
-                onEditingComplete: () {
-                  _onScreenshotScaleTextSubmitted(
-                    _screenshotScaleController.text,
-                  );
-                  FocusScope.of(context).unfocus();
-                },
-              ),
-            ],
+                    onFieldSubmitted: _onScreenshotScaleTextSubmitted,
+                    onEditingComplete: () {
+                      _onScreenshotScaleTextSubmitted(
+                        _screenshotScaleController.text,
+                      );
+                      FocusScope.of(context).unfocus();
+                    },
+                  ),
+                ],
+              ],
+            ),
             const SizedBox(height: 24),
           ],
         ),
