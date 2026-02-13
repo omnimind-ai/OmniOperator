@@ -7,6 +7,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
+import cn.com.omnimind.omnibot.controller.screenshot.ImageUtils
 import cn.com.omnimind.omnibot.util.ConnectionStatus
 import cn.com.omnimind.omnibot.util.OmniLog
 import cn.com.omnimind.omnibot.util.SocketHandler
@@ -132,6 +133,12 @@ class MainActivity : FlutterActivity() {
                     DevServerManager.apiKey =
                         if (key.isNullOrBlank()) null else key
                     OmniLog.v(TAG, "DevServer API key updated.")
+                    result.success(null)
+                }
+                "setScreenshotQuality" -> {
+                    val quality = call.argument<Int>("quality") ?: 50
+                    ImageUtils.setJpegQuality(quality)
+                    OmniLog.v(TAG, "Screenshot JPEG quality updated to ${quality.coerceIn(1, 100)}")
                     result.success(null)
                 }
                 else -> {

@@ -93,6 +93,16 @@ class AppStrings {
   String get devServerApiKeyHint =>
       _isZh ? '输入 DevServer API Key' : 'Enter DevServer API Key';
 
+  // --- Advanced settings ---
+  String get advancedSectionTitle => _isZh ? '高级' : 'Advanced';
+  String get advancedSectionSubtitle =>
+      _isZh
+          ? '调整高级参数。仅在你明确了解影响时修改。'
+          : 'Adjust advanced parameters. Change only if you understand the impact.';
+  String get screenshotQualityTitle => _isZh ? '截图质量' : 'Screenshot Quality';
+  String screenshotQualityValue(int value) =>
+      _isZh ? 'JPEG 质量：$value' : 'JPEG quality: $value';
+
   String get tryHint =>
       _isZh ? '试试：“设置明天8点的闹钟”' : 'Try: "Set an alarm for 8am tomorrow"';
   String get processingTooltip => _isZh ? '处理中...' : 'Processing...';

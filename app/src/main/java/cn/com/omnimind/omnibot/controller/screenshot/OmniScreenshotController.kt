@@ -257,9 +257,16 @@ object XmlTreeUtils {
 }
 
 object ImageUtils {
+    @Volatile
+    private var jpegQuality: Int = 50
+
+    fun setJpegQuality(quality: Int) {
+        jpegQuality = quality.coerceIn(1, 100)
+    }
+
     fun bitmapToJpegBase64(bitmap: Bitmap): String {
         val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, byteArrayOutputStream)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, jpegQuality, byteArrayOutputStream)
         val byteArray = byteArrayOutputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }

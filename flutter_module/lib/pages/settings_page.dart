@@ -37,14 +37,18 @@ class _SettingsPageState extends State<SettingsPage> {
   static const String _socketAuthTokenKey = 'socket_auth_token';
   static const String _devServerAuthEnabledKey = 'dev_server_auth_enabled';
   static const String _devServerApiKeyKey = 'dev_server_api_key';
+  static const String _screenshotQualityKey = 'screenshot_jpeg_quality';
+  static const int _defaultScreenshotQuality = 50;
   Timer? _serverDebounceTimer;
   Timer? _authDebounceTimer;
+  Timer? _advancedDebounceTimer;
   late bool _isCompanionModeEnabled;
   late AppLanguage _selectedLanguage;
   bool _socketAuthEnabled = false;
   bool _devServerAuthEnabled = false;
   bool _obscureSocketToken = true;
   bool _obscureDevServerKey = true;
+  int _screenshotQuality = _defaultScreenshotQuality;
 
   @override
   void initState() {
@@ -61,7 +65,11 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _initSettings() async {
-    await Future.wait([_loadServerAddress(), _loadAuthSettings()]);
+    await Future.wait([
+      _loadServerAddress(),
+      _loadAuthSettings(),
+      _loadAdvancedSettings(),
+    ]);
     if (!mounted) return;
     _serverIpController.addListener(_onServerAddressChanged);
     _socketAuthTokenController.addListener(_onAuthSettingChanged);
@@ -72,6 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void dispose() {
     _serverDebounceTimer?.cancel();
     _authDebounceTimer?.cancel();
+    _advancedDebounceTimer?.cancel();
     _serverIpController.removeListener(_onServerAddressChanged);
     _socketAuthTokenController.removeListener(_onAuthSettingChanged);
     _devServerApiKeyController.removeListener(_onAuthSettingChanged);
@@ -146,6 +155,36 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Future<void> _loadAdvancedSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final screenshotQuality =
+        prefs.getInt(_screenshotQualityKey) ?? _defaultScreenshotQuality;
+    final normalized = screenshotQuality.clamp(1, 100) as int;
+    if (mounted) {
+      setState(() {
+        _screenshotQuality = normalized;
+      });
+    }
+    await _pushScreenshotQualityToNative(normalized);
+  }
+
+  Future<void> _saveAdvancedSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final normalized = _screenshotQuality.clamp(1, 100) as int;
+    await prefs.setInt(_screenshotQualityKey, normalized);
+    await _pushScreenshotQualityToNative(normalized);
+  }
+
+  Future<void> _pushScreenshotQualityToNative(int quality) async {
+    try {
+      await platform.invokeMethod('setScreenshotQuality', {
+        'quality': quality.clamp(1, 100),
+      });
+    } on PlatformException catch (e) {
+      debugPrint('Error pushing screenshot quality to native: ${e.message}');
+    }
+  }
+
   Future<void> _saveServerAddress() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return; // Exit if form is not valid
@@ -176,6 +215,16 @@ class _SettingsPageState extends State<SettingsPage> {
     _authDebounceTimer?.cancel();
     _authDebounceTimer = Timer(const Duration(milliseconds: 800), () {
       _saveAuthSettings();
+    });
+  }
+
+  void _onScreenshotQualityChanged(double value) {
+    setState(() {
+      _screenshotQuality = value.round().clamp(1, 100) as int;
+    });
+    _advancedDebounceTimer?.cancel();
+    _advancedDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _saveAdvancedSettings();
     });
   }
 
@@ -422,6 +471,44 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
               ),
+            const SizedBox(height: 32),
+            Divider(color: Colors.grey.withOpacity(0.3)),
+            const SizedBox(height: 16),
+            Text(
+              strings.advancedSectionTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              strings.advancedSectionSubtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              strings.screenshotQualityTitle,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              strings.screenshotQualityValue(_screenshotQuality),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+            Slider(
+              min: 1,
+              max: 100,
+              divisions: 99,
+              value: _screenshotQuality.toDouble(),
+              label: _screenshotQuality.toString(),
+              onChanged: _onScreenshotQualityChanged,
+            ),
             const SizedBox(height: 24),
           ],
         ),
