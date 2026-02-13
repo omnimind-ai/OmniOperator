@@ -521,6 +521,28 @@ class _SettingsPageState extends State<SettingsPage> {
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
+            if (_screenshotQuality < 30) ...[
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 18,
+                    color: theme.colorScheme.error,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      strings.screenshotQualityTooLowWarning,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             Slider(
               min: 1,
               max: 100,
