@@ -331,6 +331,16 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     } on PlatformException catch (e) {
       debugPrint('Error restoring auth settings: ${e.message}');
     }
+
+    final screenshotQuality =
+        (prefs.getInt('screenshot_jpeg_quality') ?? 50).clamp(1, 100) as int;
+    try {
+      await platform.invokeMethod('setScreenshotQuality', {
+        'quality': screenshotQuality,
+      });
+    } on PlatformException catch (e) {
+      debugPrint('Error restoring screenshot quality: ${e.message}');
+    }
   }
 
   Future<void> _showInitialSetupDialog() async {
