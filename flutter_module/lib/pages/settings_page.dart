@@ -31,6 +31,7 @@ class _SettingsPageState extends State<SettingsPage> {
   late final TextEditingController _serverIpController;
   late final TextEditingController _socketAuthTokenController;
   late final TextEditingController _devServerApiKeyController;
+  late final TextEditingController _screenshotQualityController;
   // Use a consistent key across the app.
   static const String _serverIpKey = 'server_ip_address';
   static const String _socketAuthEnabledKey = 'socket_auth_enabled';
@@ -56,6 +57,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _serverIpController = TextEditingController();
     _socketAuthTokenController = TextEditingController();
     _devServerApiKeyController = TextEditingController();
+    _screenshotQualityController = TextEditingController(
+      text: _defaultScreenshotQuality.toString(),
+    );
     _isCompanionModeEnabled = widget.isCompanionModeEnabled;
     _selectedLanguage = widget.languageController.language;
 
@@ -87,6 +91,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _serverIpController.dispose();
     _socketAuthTokenController.dispose();
     _devServerApiKeyController.dispose();
+    _screenshotQualityController.dispose();
     super.dispose();
   }
 
@@ -165,6 +170,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _screenshotQuality = normalized;
       });
     }
+    _screenshotQualityController.text = normalized.toString();
     await _pushScreenshotQualityToNative(normalized);
   }
 
@@ -219,13 +225,27 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _onScreenshotQualityChanged(double value) {
+    final normalized = value.round().clamp(1, 100) as int;
     setState(() {
-      _screenshotQuality = value.round().clamp(1, 100) as int;
+      _screenshotQuality = normalized;
     });
+    if (_screenshotQualityController.text != normalized.toString()) {
+      _screenshotQualityController.text = normalized.toString();
+    }
     _advancedDebounceTimer?.cancel();
     _advancedDebounceTimer = Timer(const Duration(milliseconds: 300), () {
       _saveAdvancedSettings();
     });
+  }
+
+  void _onScreenshotQualityTextSubmitted(String value) {
+    final parsed = int.tryParse(value.trim());
+    final normalized = (parsed ?? _screenshotQuality).clamp(1, 100) as int;
+    setState(() {
+      _screenshotQuality = normalized;
+    });
+    _screenshotQualityController.text = normalized.toString();
+    _saveAdvancedSettings();
   }
 
   @override
@@ -508,6 +528,50 @@ class _SettingsPageState extends State<SettingsPage> {
               value: _screenshotQuality.toDouble(),
               label: _screenshotQuality.toString(),
               onChanged: _onScreenshotQualityChanged,
+            ),
+            TextFormField(
+              controller: _screenshotQualityController,
+              decoration: InputDecoration(
+                labelText: strings.screenshotQualityInputLabel,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                  borderSide: BorderSide(color: theme.primaryColor),
+                ),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: false,
+                signed: false,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(3),
+              ],
+              onChanged: (value) {
+                final parsed = int.tryParse(value);
+                if (parsed == null) return;
+                final normalized = parsed.clamp(1, 100) as int;
+                if (normalized == _screenshotQuality) return;
+                setState(() {
+                  _screenshotQuality = normalized;
+                });
+                _advancedDebounceTimer?.cancel();
+                _advancedDebounceTimer = Timer(
+                  const Duration(milliseconds: 300),
+                  () {
+                    _saveAdvancedSettings();
+                  },
+                );
+              },
+              onFieldSubmitted: _onScreenshotQualityTextSubmitted,
+              onEditingComplete: () {
+                _onScreenshotQualityTextSubmitted(
+                  _screenshotQualityController.text,
+                );
+                FocusScope.of(context).unfocus();
+              },
             ),
             const SizedBox(height: 24),
           ],
