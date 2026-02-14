@@ -20,16 +20,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.future.future
+import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class OmniDevServer(
     port: Int,
+    private val requestTimeoutMillis: Long = DEFAULT_REQUEST_TIMEOUT_MILLIS,
 ) : NanoHTTPD(port) {
     companion object {
         private const val TAG = "OmniDevServer"
-        private const val REQUEST_TIMEOUT_MILLIS = 15_000L
+        private const val DEFAULT_REQUEST_TIMEOUT_MILLIS = 15_000L
     }
 
     private var lastScreenshotTimestamp: Long = 0L
@@ -80,13 +82,20 @@ class OmniDevServer(
                 )
             }
         return try {
-            routeFuture.get(REQUEST_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+            routeFuture.get(requestTimeoutMillis, TimeUnit.MILLISECONDS)
         } catch (_: TimeoutException) {
             routeFuture.cancel(true)
             newFixedLengthResponse(
                 Response.Status.INTERNAL_ERROR,
                 "application/json",
                 """{"success":false,"message":"Request timed out"}""",
+            )
+        } catch (e: CancellationException) {
+            OmniLog.e(TAG, "Request cancelled: ${e.message}", e)
+            newFixedLengthResponse(
+                Response.Status.INTERNAL_ERROR,
+                "application/json",
+                """{"success":false,"message":"Request cancelled"}""",
             )
         } catch (e: ExecutionException) {
             OmniLog.e(TAG, "Route execution failed: ${e.cause?.message ?: e.message}", e)
