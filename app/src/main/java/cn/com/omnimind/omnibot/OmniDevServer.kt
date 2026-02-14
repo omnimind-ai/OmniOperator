@@ -12,15 +12,29 @@ import cn.com.omnimind.omnibot.devserver.command.handlers.SystemCommandHandlers
 import cn.com.omnimind.omnibot.devserver.openapi.OpenApiDocumentBuilder
 import cn.com.omnimind.omnibot.devserver.route.DevServerRouteDispatcher
 import cn.com.omnimind.omnibot.devserver.route.StaticContentHandler
+import cn.com.omnimind.omnibot.util.OmniLog
 import com.google.gson.Gson
 import fi.iki.elonen.NanoHTTPD
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.future.future
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 class OmniDevServer(
     port: Int,
 ) : NanoHTTPD(port) {
+    companion object {
+        private const val TAG = "OmniDevServer"
+        private const val REQUEST_TIMEOUT_MILLIS = 15_000L
+    }
+
     private var lastScreenshotTimestamp: Long = 0L
     private var lastXmlTimestamp: Long = 0L
+    private val requestScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     var apiKey: String? = null
 
@@ -56,14 +70,46 @@ class OmniDevServer(
             commandRoutes = commandRouteMap,
         )
 
-    override fun serve(session: IHTTPSession): Response =
-        runBlocking {
-            DevServerAuth.enforce(session, apiKey)?.let { return@runBlocking it }
-            return@runBlocking routeDispatcher.dispatch(
-                session = session,
-                healthVersion = BuildConfig.VERSION_NAME,
+    override fun serve(session: IHTTPSession): Response {
+        DevServerAuth.enforce(session, apiKey)?.let { return it }
+        val routeFuture =
+            requestScope.future {
+                routeDispatcher.dispatch(
+                    session = session,
+                    healthVersion = BuildConfig.VERSION_NAME,
+                )
+            }
+        return try {
+            routeFuture.get(REQUEST_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)
+        } catch (_: TimeoutException) {
+            routeFuture.cancel(true)
+            newFixedLengthResponse(
+                Response.Status.INTERNAL_ERROR,
+                "application/json",
+                """{"success":false,"message":"Request timed out"}""",
+            )
+        } catch (e: ExecutionException) {
+            OmniLog.e(TAG, "Route execution failed: ${e.cause?.message ?: e.message}", e)
+            newFixedLengthResponse(
+                Response.Status.INTERNAL_ERROR,
+                "application/json",
+                """{"success":false,"message":"Internal server error"}""",
+            )
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            OmniLog.e(TAG, "Request thread interrupted: ${e.message}", e)
+            newFixedLengthResponse(
+                Response.Status.INTERNAL_ERROR,
+                "application/json",
+                """{"success":false,"message":"Internal server error"}""",
             )
         }
+    }
+
+    override fun stop() {
+        requestScope.cancel("Dev server stopped")
+        super.stop()
+    }
 
     private fun handleCommandsRequest(): Response {
         val commands = CommandRegistry.toCommandList(commandRoutes)
