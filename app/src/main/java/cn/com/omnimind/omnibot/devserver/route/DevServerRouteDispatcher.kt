@@ -31,15 +31,16 @@ class DevServerRouteDispatcher(
                 when {
                     session.uri.startsWith("/static/") -> staticContentHandler.handleStaticFileRequest(session)
                     commandRoutes.containsKey(session.uri) -> commandRoutes[session.uri]!!.invoke(session)
-                    else -> handleNotFound()
+                    else -> handleNotFound(session.uri)
                 }
             }
         }
 
-    private fun handleNotFound(): NanoHTTPD.Response =
-        NanoHTTPD.newFixedLengthResponse(
+    private fun handleNotFound(@Suppress("UNUSED_PARAMETER") uri: String): NanoHTTPD.Response {
+        return NanoHTTPD.newFixedLengthResponse(
             NanoHTTPD.Response.Status.NOT_FOUND,
             "text/plain",
             "Not Found",
         )
+    }
 }

@@ -18,14 +18,11 @@ class SystemCommandHandlers {
         LaunchApplicationResult::class,
     )
     private suspend fun handleLaunchApplicationRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val packageName = CommandRequest.stringParam(session, "packageName")
-
-        return if (packageName != null) {
-            val res = OmniOperatorService.launchApplication(packageName)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Missing package name")
-        }
+        val packageName =
+            CommandRequest.stringParam(session, "packageName")
+                ?: return CommandRequest.badRequest("Missing package name")
+        val res = OmniOperatorService.launchApplication(packageName)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(

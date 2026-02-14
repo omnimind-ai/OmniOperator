@@ -15,4 +15,10 @@ object CommandRequest {
 
     fun floatParam(session: NanoHTTPD.IHTTPSession, key: String): Float? =
         session.parameters[key]?.firstOrNull()?.toFloatOrNull()
+
+    fun semicolonListParam(
+        session: NanoHTTPD.IHTTPSession,
+        key: String,
+    ): List<String>? =
+        stringParam(session, key)?.split(";")?.map { it.trim() }
 }

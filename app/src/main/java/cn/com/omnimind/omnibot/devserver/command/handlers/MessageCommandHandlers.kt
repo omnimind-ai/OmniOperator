@@ -18,14 +18,9 @@ class MessageCommandHandlers {
         RequireUserConfirmationResult::class,
     )
     private suspend fun handleRequireUserConfirmationRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val prompt = CommandRequest.stringParam(session, "prompt")
-
-        return if (prompt != null) {
-            val res = OmniOperatorService.requireUserConfirmation(prompt)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Missing prompt")
-        }
+        val prompt = CommandRequest.stringParam(session, "prompt") ?: return CommandRequest.badRequest("Missing prompt")
+        val res = OmniOperatorService.requireUserConfirmation(prompt)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(
@@ -35,15 +30,15 @@ class MessageCommandHandlers {
         RequireUserChoiceResult::class,
     )
     private suspend fun handleRequireUserChoiceRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val prompt = CommandRequest.stringParam(session, "prompt")
-        val options = CommandRequest.stringParam(session, "options")?.split(";")?.map { it.trim() }
-
-        return if (prompt != null && !options.isNullOrEmpty()) {
-            val res = OmniOperatorService.requireUserChoice(prompt, options)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Missing prompt or options")
-        }
+        val prompt =
+            CommandRequest.stringParam(session, "prompt")
+                ?: return CommandRequest.badRequest("Missing prompt or options")
+        val options =
+            CommandRequest.semicolonListParam(session, "options")
+                ?.takeIf { it.isNotEmpty() }
+                ?: return CommandRequest.badRequest("Missing prompt or options")
+        val res = OmniOperatorService.requireUserChoice(prompt, options)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(
@@ -53,16 +48,11 @@ class MessageCommandHandlers {
         PushMessageToBotResult::class,
     )
     private suspend fun handlePushMessageToBotRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val message = CommandRequest.stringParam(session, "message")
+        val message = CommandRequest.stringParam(session, "message") ?: return CommandRequest.badRequest("Missing message")
         val suggestionTitle = CommandRequest.stringParam(session, "suggestionTitle")
-        val suggestions = CommandRequest.stringParam(session, "suggestions")?.split(";")?.map { it.trim() }
-
-        return if (message != null) {
-            val res = OmniOperatorService.pushMessageToBot(message, suggestionTitle, suggestions)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Missing message")
-        }
+        val suggestions = CommandRequest.semicolonListParam(session, "suggestions")
+        val res = OmniOperatorService.pushMessageToBot(message, suggestionTitle, suggestions)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(
@@ -72,14 +62,13 @@ class MessageCommandHandlers {
         ShowMessageResult::class,
     )
     private suspend fun handleShowMessageRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val title = CommandRequest.stringParam(session, "title")
-        val content = CommandRequest.stringParam(session, "content")
-
-        return if (title != null && content != null) {
-            val res = OmniOperatorService.showMessage(title, content)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Missing title or content")
-        }
+        val title =
+            CommandRequest.stringParam(session, "title")
+                ?: return CommandRequest.badRequest("Missing title or content")
+        val content =
+            CommandRequest.stringParam(session, "content")
+                ?: return CommandRequest.badRequest("Missing title or content")
+        val res = OmniOperatorService.showMessage(title, content)
+        return CommandResultWriter.handleResult(res)
     }
 }

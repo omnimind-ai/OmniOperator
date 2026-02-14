@@ -17,15 +17,10 @@ class CoordinateCommandHandlers {
         ClickCoordinateResult::class,
     )
     private suspend fun handleClickCoordinateRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val x = CommandRequest.floatParam(session, "x")
-        val y = CommandRequest.floatParam(session, "y")
-
-        return if (x != null && y != null) {
-            val res = OmniOperatorService.clickCoordinate(x, y)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Invalid coordinates")
-        }
+        val x = CommandRequest.floatParam(session, "x") ?: return CommandRequest.badRequest("Invalid coordinates")
+        val y = CommandRequest.floatParam(session, "y") ?: return CommandRequest.badRequest("Invalid coordinates")
+        val res = OmniOperatorService.clickCoordinate(x, y)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(
@@ -35,15 +30,10 @@ class CoordinateCommandHandlers {
         LongClickCoordinateResult::class,
     )
     private suspend fun handleLongClickCoordinateRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val x = CommandRequest.floatParam(session, "x")
-        val y = CommandRequest.floatParam(session, "y")
-
-        return if (x != null && y != null) {
-            val res = OmniOperatorService.longClickCoordinate(x, y)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Invalid coordinates")
-        }
+        val x = CommandRequest.floatParam(session, "x") ?: return CommandRequest.badRequest("Invalid coordinates")
+        val y = CommandRequest.floatParam(session, "y") ?: return CommandRequest.badRequest("Invalid coordinates")
+        val res = OmniOperatorService.longClickCoordinate(x, y)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(
@@ -53,16 +43,15 @@ class CoordinateCommandHandlers {
         ScrollCoordinateResult::class,
     )
     private suspend fun handleScrollCoordinateRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val x = CommandRequest.floatParam(session, "x")
-        val y = CommandRequest.floatParam(session, "y")
-        val direction = CommandRequest.stringParam(session, "direction")
-        val distance = CommandRequest.floatParam(session, "distance")
-
-        return if (x != null && y != null && direction != null && distance != null) {
-            val res = OmniOperatorService.scrollCoordinate(x, y, direction, distance)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Invalid parameters")
-        }
+        val x = CommandRequest.floatParam(session, "x") ?: return CommandRequest.badRequest("Invalid parameters")
+        val y = CommandRequest.floatParam(session, "y") ?: return CommandRequest.badRequest("Invalid parameters")
+        val direction =
+            CommandRequest.stringParam(session, "direction")
+                ?: return CommandRequest.badRequest("Invalid parameters")
+        val distance =
+            CommandRequest.floatParam(session, "distance")
+                ?: return CommandRequest.badRequest("Invalid parameters")
+        val res = OmniOperatorService.scrollCoordinate(x, y, direction, distance)
+        return CommandResultWriter.handleResult(res)
     }
 }

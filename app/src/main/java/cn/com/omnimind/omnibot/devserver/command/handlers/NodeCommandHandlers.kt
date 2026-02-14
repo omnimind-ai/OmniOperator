@@ -16,26 +16,16 @@ import fi.iki.elonen.NanoHTTPD
 class NodeCommandHandlers {
     @CommandInfo("clickNode", "Click on a node.", ["nodeId"], ClickNodeResult::class)
     private suspend fun handleClickNodeRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val nodeId = CommandRequest.stringParam(session, "nodeId")
-
-        return if (nodeId != null) {
-            val res = OmniOperatorService.clickNode(nodeId)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Invalid node id")
-        }
+        val nodeId = CommandRequest.stringParam(session, "nodeId") ?: return CommandRequest.badRequest("Invalid node id")
+        val res = OmniOperatorService.clickNode(nodeId)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo("longClickNode", "Long click on a node.", ["nodeId"], LongClickNodeResult::class)
     private suspend fun handleLongClickNodeRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val nodeId = CommandRequest.stringParam(session, "nodeId")
-
-        return if (nodeId != null) {
-            val res = OmniOperatorService.longClickNode(nodeId)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Invalid node id")
-        }
+        val nodeId = CommandRequest.stringParam(session, "nodeId") ?: return CommandRequest.badRequest("Invalid node id")
+        val res = OmniOperatorService.longClickNode(nodeId)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(
@@ -45,15 +35,14 @@ class NodeCommandHandlers {
         ScrollNodeResult::class,
     )
     private suspend fun handleScrollNodeRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val nodeId = CommandRequest.stringParam(session, "nodeId")
-        val direction = CommandRequest.stringParam(session, "direction")
-
-        return if (nodeId != null && direction != null) {
-            val res = OmniOperatorService.scrollNode(nodeId, direction)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Invalid node id or invalid direction")
-        }
+        val nodeId =
+            CommandRequest.stringParam(session, "nodeId")
+                ?: return CommandRequest.badRequest("Invalid node id or invalid direction")
+        val direction =
+            CommandRequest.stringParam(session, "direction")
+                ?: return CommandRequest.badRequest("Invalid node id or invalid direction")
+        val res = OmniOperatorService.scrollNode(nodeId, direction)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(
@@ -63,15 +52,14 @@ class NodeCommandHandlers {
         InputTextResult::class,
     )
     private suspend fun handleInputTextRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val nodeId = CommandRequest.stringParam(session, "nodeId")
-        val text = CommandRequest.stringParam(session, "text")
-
-        return if (nodeId != null && text != null) {
-            val res = OmniOperatorService.inputText(nodeId, text)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Invalid node id or empty text")
-        }
+        val nodeId =
+            CommandRequest.stringParam(session, "nodeId")
+                ?: return CommandRequest.badRequest("Invalid node id or empty text")
+        val text =
+            CommandRequest.stringParam(session, "text")
+                ?: return CommandRequest.badRequest("Invalid node id or empty text")
+        val res = OmniOperatorService.inputText(nodeId, text)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(
@@ -81,14 +69,9 @@ class NodeCommandHandlers {
         InputTextToFocusedNodeResult::class,
     )
     private suspend fun handleInputTextToFocusedNodeRequest(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val text = CommandRequest.stringParam(session, "text")
-
-        return if (text != null) {
-            val res = OmniOperatorService.inputTextToFocusedNode(text)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Empty text")
-        }
+        val text = CommandRequest.stringParam(session, "text") ?: return CommandRequest.badRequest("Empty text")
+        val res = OmniOperatorService.inputTextToFocusedNode(text)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(
@@ -98,14 +81,9 @@ class NodeCommandHandlers {
         CopyToClipboardResult::class,
     )
     private suspend fun copyToClipboard(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val text = CommandRequest.stringParam(session, "text")
-
-        return if (text != null) {
-            val res = OmniOperatorService.copyToClipboard(text)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Empty text")
-        }
+        val text = CommandRequest.stringParam(session, "text") ?: return CommandRequest.badRequest("Empty text")
+        val res = OmniOperatorService.copyToClipboard(text)
+        return CommandResultWriter.handleResult(res)
     }
 
     @CommandInfo(
@@ -115,13 +93,8 @@ class NodeCommandHandlers {
         InjectTextByIMEResult::class,
     )
     private suspend fun injectTextByIME(session: NanoHTTPD.IHTTPSession): NanoHTTPD.Response {
-        val text = CommandRequest.stringParam(session, "text")
-
-        return if (text != null) {
-            val res = OmniOperatorService.injectTextByIME(text)
-            CommandResultWriter.handleResult(res)
-        } else {
-            CommandRequest.badRequest("Empty text")
-        }
+        val text = CommandRequest.stringParam(session, "text") ?: return CommandRequest.badRequest("Empty text")
+        val res = OmniOperatorService.injectTextByIME(text)
+        return CommandResultWriter.handleResult(res)
     }
 }
