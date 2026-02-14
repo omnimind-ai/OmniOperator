@@ -24,3 +24,7 @@
 local.properties
 /misc/
 /out/
+/.gradle_user_home/
+/.make.env.resolved
+/node_modules/
+/.checkpoints/
