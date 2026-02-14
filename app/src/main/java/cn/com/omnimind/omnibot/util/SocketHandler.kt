@@ -5,8 +5,11 @@ import com.google.gson.Gson
 import io.socket.client.Ack
 import io.socket.client.IO
 import io.socket.client.Socket
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
@@ -23,6 +26,7 @@ enum class ConnectionStatus {
 
 object SocketHandler {
     private var mSocket: Socket? = null
+    private var commandScope: CoroutineScope? = null
     private val gson = Gson()
 
     // Optional auth token for Socket.IO connection.
@@ -104,10 +108,12 @@ object SocketHandler {
                     serverUrl
                 }
             mSocket = IO.socket(url, opts)
+            createCommandScope()
             OmniLog.i("SocketHandler", "Initializing socket for server: $url")
         } catch (e: Exception) {
             e.printStackTrace()
             OmniLog.e("SocketHandler", "Failed to initialize socket: ${e.message}")
+            cancelCommandScope("Socket initialization failed")
             return ConnectionStatus.FAILURE
         }
 
@@ -276,18 +282,21 @@ object SocketHandler {
             }
         }
 
-        mSocket?.on(Socket.EVENT_DISCONNECT) { OmniLog.w("SocketHandler", "🔴 Socket Disconnected.") }
+        mSocket?.on(Socket.EVENT_DISCONNECT) {
+            OmniLog.w("SocketHandler", "🔴 Socket Disconnected.")
+            cancelCommandScope("Socket disconnected")
+        }
     }
 
     @Synchronized
     fun closeConnection() {
+        cancelCommandScope("Connection closed")
         mSocket?.disconnect()
         mSocket?.off()
         mSocket = null
         OmniLog.i("SocketHandler", "Socket connection resources released.")
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     private fun handleCommandWithAck(
         args: Array<Any>,
         commandName: String,
@@ -295,11 +304,24 @@ object SocketHandler {
     ) {
         val data = args.getOrNull(0) as? JSONObject
         val ack = args.lastOrNull() as? Ack
+        val scope = currentCommandScope()
+        if (scope == null) {
+            OmniLog.w("SocketHandler", "Skip '$commandName': command scope is not active.")
+            ack?.call(
+                JSONObject()
+                    .put("success", false)
+                    .put("message", "Socket command scope is not active."),
+            )
+            return
+        }
         OmniLog.i("SocketHandler", "-> '$commandName' with data: $data")
-        GlobalScope.launch {
+        scope.launch {
             val result =
                 try {
                     operation(data)
+                } catch (e: CancellationException) {
+                    OmniLog.w("SocketHandler", "⚪️ '$commandName' cancelled: ${e.message}")
+                    return@launch
                 } catch (e: Exception) {
                     OmniLog.e("SocketHandler", "⚠️ Exception during '$commandName': ${e.message}", e)
                     mapOf("success" to false, "message" to "Exception: ${e.message}")
@@ -317,4 +339,23 @@ object SocketHandler {
             OmniLog.i("SocketHandler", "<- '$commandName' with message: ${resultJson.optString("message")}")
         }
     }
+
+    @Synchronized
+    private fun createCommandScope() {
+        if (commandScope != null) {
+            return
+        }
+        commandScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        OmniLog.i("SocketHandler", "Socket command scope created.")
+    }
+
+    @Synchronized
+    private fun cancelCommandScope(reason: String) {
+        commandScope?.cancel()
+        commandScope = null
+        OmniLog.i("SocketHandler", "Socket command scope cancelled: $reason")
+    }
+
+    @Synchronized
+    private fun currentCommandScope(): CoroutineScope? = commandScope
 }
