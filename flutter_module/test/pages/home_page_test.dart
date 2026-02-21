@@ -90,12 +90,14 @@ void main() {
   });
 
   testWidgets('dev server mode should disable sending from mobile', (tester) async {
+    const strings = AppStrings(AppLanguage.zh);
     await pumpHomePage(tester);
 
-    await tester.tap(find.text('启动 DevServer'));
+    await tester.tap(find.byIcon(Icons.rocket_launch_outlined).first);
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+    expect(find.byTooltip(strings.devServerDesktopOnly), findsOneWidget);
     expect(sendTextCalls, 0);
     await disposeHomePage(tester);
   });
