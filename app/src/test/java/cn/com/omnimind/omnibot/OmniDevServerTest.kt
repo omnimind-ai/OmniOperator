@@ -22,6 +22,22 @@ class OmniDevServerTest {
     }
 
     @Test
+    fun `serve should return 401 when api key is set and auth header is invalid`() {
+        val server = OmniDevServer(18080).apply { apiKey = "secret" }
+        val session =
+            FakeSession(
+                uri = "/commands",
+                headers = mapOf("authorization" to "Bearer wrong-secret"),
+            )
+
+        val response = server.serve(session)
+        val body = response.getData().bufferedReader().use { it.readText() }
+
+        assertEquals(NanoHTTPD.Response.Status.UNAUTHORIZED, response.status)
+        assertTrue(body.contains("Unauthorized"))
+    }
+
+    @Test
     fun `serve should allow health endpoint without auth`() {
         val server = OmniDevServer(18080).apply { apiKey = "secret" }
         val session = FakeSession(uri = "/health")
@@ -43,6 +59,30 @@ class OmniDevServerTest {
 
         assertEquals(NanoHTTPD.Response.Status.BAD_REQUEST, response.status)
         assertTrue(body.contains("Invalid coordinates"))
+    }
+
+    @Test
+    fun `clickNode should return 400 when nodeId is missing`() {
+        val server = OmniDevServer(18080)
+        val session = FakeSession(uri = "/clickNode")
+
+        val response = server.serve(session)
+        val body = response.getData().bufferedReader().use { it.readText() }
+
+        assertEquals(NanoHTTPD.Response.Status.BAD_REQUEST, response.status)
+        assertTrue(body.contains("Invalid node id"))
+    }
+
+    @Test
+    fun `inputText should return 400 when text is missing`() {
+        val server = OmniDevServer(18080)
+        val session = FakeSession(uri = "/inputText", parameters = mapOf("nodeId" to listOf("node-1")))
+
+        val response = server.serve(session)
+        val body = response.getData().bufferedReader().use { it.readText() }
+
+        assertEquals(NanoHTTPD.Response.Status.BAD_REQUEST, response.status)
+        assertTrue(body.contains("Invalid node id or empty text"))
     }
 }
 

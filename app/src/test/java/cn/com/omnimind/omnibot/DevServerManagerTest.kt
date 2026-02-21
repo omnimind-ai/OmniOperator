@@ -44,4 +44,29 @@ class DevServerManagerTest {
         assertTrue(bindResult)
         assertFalse(unknownResult)
     }
+
+    @Test
+    fun `start and stop should be idempotent and update running state`() {
+        val context = RuntimeEnvironment.getApplication()
+        DevServerManager.stopServer(context)
+        assertFalse(DevServerManager.isRunning)
+
+        try {
+            val firstAddress = DevServerManager.startServer(context)
+            assertTrue(DevServerManager.isRunning)
+
+            val secondAddress = DevServerManager.startServer(context)
+            assertTrue(DevServerManager.isRunning)
+            assertTrue(firstAddress.isNotBlank())
+            assertTrue(firstAddress == secondAddress)
+
+            DevServerManager.stopServer(context)
+            assertFalse(DevServerManager.isRunning)
+
+            DevServerManager.stopServer(context)
+            assertFalse(DevServerManager.isRunning)
+        } finally {
+            DevServerManager.stopServer(context)
+        }
+    }
 }
