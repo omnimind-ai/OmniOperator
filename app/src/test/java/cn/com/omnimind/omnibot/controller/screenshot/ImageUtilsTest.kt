@@ -18,6 +18,12 @@ class ImageUtilsTest {
 
         ImageUtils.setJpegQuality(101)
         assertEquals(100, getPrivateInt("jpegQuality"))
+
+        ImageUtils.setJpegQuality(1)
+        assertEquals(1, getPrivateInt("jpegQuality"))
+
+        ImageUtils.setJpegQuality(100)
+        assertEquals(100, getPrivateInt("jpegQuality"))
     }
 
     @Test
@@ -35,10 +41,38 @@ class ImageUtilsTest {
         assertEquals(5, decoded.height)
     }
 
+    @Test
+    fun `setResizeConfig should clamp scale to boundaries`() {
+        ImageUtils.setResizeConfig(enabled = true, scalePercent = 0)
+        assertEquals(1, getPrivateInt("scalePercent"))
+
+        ImageUtils.setResizeConfig(enabled = true, scalePercent = 101)
+        assertEquals(100, getPrivateInt("scalePercent"))
+
+        ImageUtils.setResizeConfig(enabled = true, scalePercent = 1)
+        assertEquals(1, getPrivateInt("scalePercent"))
+
+        ImageUtils.setResizeConfig(enabled = true, scalePercent = 100)
+        assertEquals(100, getPrivateInt("scalePercent"))
+    }
+
+    @Test
+    fun `resize disabled should keep original bitmap dimensions`() {
+        val source = Bitmap.createBitmap(10, 10, Bitmap.Config.ARGB_8888)
+        ImageUtils.setResizeConfig(enabled = false, scalePercent = 1)
+
+        val base64 = ImageUtils.bitmapToJpegBase64(source)
+        val bytes = Base64.decode(base64, Base64.DEFAULT)
+        val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
+        assertNotNull(decoded)
+        assertEquals(10, decoded.width)
+        assertEquals(10, decoded.height)
+    }
+
     private fun getPrivateInt(name: String): Int {
         val field = ImageUtils::class.java.getDeclaredField(name)
         field.isAccessible = true
         return field.getInt(null)
     }
 }
-
