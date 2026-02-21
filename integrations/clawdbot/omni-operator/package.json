@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Clawdbot plugin for controlling Android devices via OmniOperator DevServer",
+  "scripts": {
+    "test": "node --experimental-strip-types --test \"test/**/*.test.ts\""
+  },
   "clawdbot": {
     "extensions": ["./index.ts"]
   },

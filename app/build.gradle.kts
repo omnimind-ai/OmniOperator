@@ -77,6 +77,9 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
     splits {
         abi {
             isEnable = true
@@ -116,6 +119,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.fragment.ktx)
     testImplementation(libs.junit)
+    testImplementation("org.robolectric:robolectric:4.14.1")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
