@@ -25,7 +25,7 @@ class MessageCommandHandlers {
 
     @CommandInfo(
         "requireUserChoice",
-        "Require user to choose from a list of options, dividing by semicolon(;).",
+        "Require user to choose from a list of options, separated by semicolon(;).",
         ["prompt", "options"],
         RequireUserChoiceResult::class,
     )

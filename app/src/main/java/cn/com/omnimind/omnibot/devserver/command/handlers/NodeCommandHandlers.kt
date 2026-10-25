@@ -88,7 +88,7 @@ class NodeCommandHandlers {
 
     @CommandInfo(
         "injectTextByIME",
-        "Use OmniIME to input text  (not fully complete yet, there might be some bugs QwQ)",
+        "Use OmniIME to input text (not fully complete yet, there might be some bugs QwQ)",
         ["text"],
         InjectTextByIMEResult::class,
     )
